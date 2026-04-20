@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createEntry } from "@/app/actions/entries";
-import type { EntryType } from "@/db/schema";
+import type { Entry, EntryType } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
 const MAX = 280;
@@ -16,7 +16,7 @@ const PLACEHOLDER: Record<EntryType, string> = {
 
 interface EntryFormProps {
   type: EntryType;
-  onSuccess: () => void;
+  onSuccess: (entry: Entry) => void;
   onBack?: () => void;
   initialDescription?: string;
 }
@@ -44,8 +44,8 @@ export function EntryForm({
     setError("");
     startTransition(async () => {
       try {
-        await createEntry({ type, description: trimmed });
-        onSuccess();
+        const entry = await createEntry({ type, description: trimmed });
+        onSuccess(entry);
       } catch {
         setError("Erro ao salvar. Tente novamente.");
       }

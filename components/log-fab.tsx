@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { LogBottomSheet } from "./log-bottom-sheet";
+import type { Entry } from "@/db/schema";
 
-export function LogFAB() {
+interface LogFABProps {
+  onNewEntry?: (entry: Entry) => void;
+}
+
+export function LogFAB({ onNewEntry }: LogFABProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -16,7 +21,11 @@ export function LogFAB() {
       >
         <Plus size={24} aria-hidden />
       </button>
-      <LogBottomSheet open={open} onClose={() => setOpen(false)} />
+      <LogBottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        onNewEntry={onNewEntry}
+      />
     </>
   );
 }

@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { BottomSheet } from "./bottom-sheet";
 import { EntryForm } from "./entry-form";
-import type { EntryType } from "@/db/schema";
+import type { Entry, EntryType } from "@/db/schema";
 
 interface LogBottomSheetProps {
   open: boolean;
   onClose: () => void;
+  onNewEntry?: (entry: Entry) => void;
 }
 
-export function LogBottomSheet({ open, onClose }: LogBottomSheetProps) {
+export function LogBottomSheet({ open, onClose, onNewEntry }: LogBottomSheetProps) {
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
 
   function handleClose() {
@@ -53,7 +54,7 @@ export function LogBottomSheet({ open, onClose }: LogBottomSheetProps) {
       ) : (
         <EntryForm
           type={selectedType}
-          onSuccess={handleClose}
+          onSuccess={(entry) => { onNewEntry?.(entry); handleClose(); }}
           onBack={() => setSelectedType(null)}
         />
       )}
