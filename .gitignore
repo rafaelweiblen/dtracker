@@ -45,3 +45,7 @@ next-env.d.ts
 local.db
 local.db-shm
 local.db-wal
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
