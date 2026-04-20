@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { LogBottomSheet } from "./log-bottom-sheet";
 import type { Entry } from "@/db/schema";
+import type { PendingEntry } from "@/types/offline";
 
 interface LogFABProps {
   onNewEntry?: (entry: Entry) => void;
+  enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
 }
 
-export function LogFAB({ onNewEntry }: LogFABProps) {
+export function LogFAB({ onNewEntry, enqueue }: LogFABProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -25,6 +27,7 @@ export function LogFAB({ onNewEntry }: LogFABProps) {
         open={open}
         onClose={() => setOpen(false)}
         onNewEntry={onNewEntry}
+        enqueue={enqueue}
       />
     </>
   );

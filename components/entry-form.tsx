@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createEntry } from "@/app/actions/entries";
 import type { Entry, EntryType } from "@/db/schema";
+import type { PendingEntry } from "@/types/offline";
 import { cn } from "@/lib/utils";
 
 const MAX = 280;
@@ -19,6 +20,7 @@ interface EntryFormProps {
   onSuccess: (entry: Entry) => void;
   onBack?: () => void;
   initialDescription?: string;
+  enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
 }
 
 export function EntryForm({
@@ -26,10 +28,12 @@ export function EntryForm({
   onSuccess,
   onBack,
   initialDescription = "",
+  enqueue,
 }: EntryFormProps) {
   const [description, setDescription] = useState(initialDescription);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
   const trimmed = description.trim();
   const count = trimmed.length;
@@ -42,6 +46,34 @@ export function EntryForm({
       return;
     }
     setError("");
+
+    if (!isOnline && enqueue) {
+      startTransition(async () => {
+        const id = crypto.randomUUID();
+        const now = new Date();
+        await enqueue({
+          id,
+          type,
+          description: trimmed,
+          date: now.toISOString().slice(0, 10),
+          createdAt: now.getTime(),
+        });
+        const fakeEntry: Entry = {
+          id,
+          userId: "",
+          type,
+          description: trimmed,
+          date: now.toISOString().slice(0, 10),
+          createdAt: now,
+          updatedAt: now,
+          edited: false,
+          pendingSync: true,
+        };
+        onSuccess(fakeEntry);
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
         const entry = await createEntry({ type, description: trimmed });
@@ -68,6 +100,11 @@ export function EntryForm({
         <p className="font-medium">
           {type === "escape" ? "🍕 Escapei da dieta" : "🏃 Fiz exercício"}
         </p>
+        {!isOnline && (
+          <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+            <WifiOff size={12} aria-hidden /> offline
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -89,19 +126,14 @@ export function EntryForm({
           ) : (
             <span />
           )}
-          <span
-            className={cn(
-              "text-xs text-muted-foreground",
-              count > MAX && "text-destructive"
-            )}
-          >
+          <span className={cn("text-xs text-muted-foreground", count > MAX && "text-destructive")}>
             {count}/{MAX}
           </span>
         </div>
       </div>
 
       <Button type="submit" disabled={!isValid || isPending}>
-        {isPending ? "Salvando…" : "Salvar"}
+        {isPending ? "Salvando…" : isOnline ? "Salvar" : "Salvar offline"}
       </Button>
     </form>
   );

@@ -4,14 +4,16 @@ import { useState } from "react";
 import { BottomSheet } from "./bottom-sheet";
 import { EntryForm } from "./entry-form";
 import type { Entry, EntryType } from "@/db/schema";
+import type { PendingEntry } from "@/types/offline";
 
 interface LogBottomSheetProps {
   open: boolean;
   onClose: () => void;
   onNewEntry?: (entry: Entry) => void;
+  enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
 }
 
-export function LogBottomSheet({ open, onClose, onNewEntry }: LogBottomSheetProps) {
+export function LogBottomSheet({ open, onClose, onNewEntry, enqueue }: LogBottomSheetProps) {
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
 
   function handleClose() {
@@ -56,6 +58,7 @@ export function LogBottomSheet({ open, onClose, onNewEntry }: LogBottomSheetProp
           type={selectedType}
           onSuccess={(entry) => { onNewEntry?.(entry); handleClose(); }}
           onBack={() => setSelectedType(null)}
+          enqueue={enqueue}
         />
       )}
     </BottomSheet>

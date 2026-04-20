@@ -6,6 +6,7 @@ import { deleteEntry } from "@/app/actions/entries";
 import { EntrySection } from "./entry-section";
 import { EditBottomSheet } from "./edit-bottom-sheet";
 import { LogFAB } from "./log-fab";
+import { useSyncQueue } from "@/hooks/use-sync-queue";
 
 interface DailyLogProps {
   initialEntries: Entry[];
@@ -20,6 +21,7 @@ export function DailyLog({ initialEntries, date: _date, readOnly = false }: Dail
   );
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [, startTransition] = useTransition();
+  const { enqueue } = useSyncQueue();
 
   const escapes = optimisticEntries.filter((e) => e.type === "escape");
   const exercises = optimisticEntries.filter((e) => e.type === "exercise");
@@ -54,7 +56,12 @@ export function DailyLog({ initialEntries, date: _date, readOnly = false }: Dail
         </>
       )}
 
-      {!readOnly && <LogFAB onNewEntry={(e) => addOptimistic(e)} />}
+      {!readOnly && (
+        <LogFAB
+          onNewEntry={(e) => addOptimistic(e)}
+          enqueue={enqueue}
+        />
+      )}
 
       <EditBottomSheet
         entry={editingEntry}
