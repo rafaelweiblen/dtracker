@@ -1,11 +1,36 @@
 import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 
+// Auth.js requires: id, name, email, emailVerified, image
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
+  name: text("name"),
   email: text("email").notNull().unique(),
-  name: text("name").notNull(),
+  emailVerified: integer("email_verified", { mode: "timestamp" }),
   image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }),
+});
+
+// Auth.js requires column keys to match its expected interface (snake_case)
+export const accounts = sqliteTable("accounts", {
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  provider: text("provider").notNull(),
+  providerAccountId: text("provider_account_id").notNull(),
+  // eslint-disable-next-line camelcase
+  refresh_token: text("refresh_token"),
+  // eslint-disable-next-line camelcase
+  access_token: text("access_token"),
+  // eslint-disable-next-line camelcase
+  expires_at: integer("expires_at"),
+  // eslint-disable-next-line camelcase
+  token_type: text("token_type"),
+  scope: text("scope"),
+  // eslint-disable-next-line camelcase
+  id_token: text("id_token"),
+  // eslint-disable-next-line camelcase
+  session_state: text("session_state"),
 });
 
 export const entries = sqliteTable(
