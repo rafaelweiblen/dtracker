@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { BottomSheet } from "./bottom-sheet";
 import { updateEntry } from "@/app/actions/entries";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, UtensilsCrossed, Dumbbell } from "lucide-react";
 import type { Entry } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +60,11 @@ export function EditBottomSheet({ entry, onClose }: EditBottomSheetProps) {
             <ChevronLeft size={20} />
           </button>
           <p className="font-medium">
-            {entry?.type === "escape" ? "🍕 Editar escapada" : "🏃 Editar exercício"}
+            {entry?.type === "escape" ? (
+              <><UtensilsCrossed size={16} className="inline-block text-red-600" /> Editar escapada</>
+            ) : (
+              <><Dumbbell size={16} className="inline-block text-green-600" /> Editar exercício</>
+            )}
           </p>
         </div>
 

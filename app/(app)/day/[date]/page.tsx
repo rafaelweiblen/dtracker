@@ -47,7 +47,7 @@ export default async function DayDetailPage({
         </Link>
         <h1 className="text-xl font-semibold capitalize">{formatDate(date)}</h1>
       </div>
-      <DailyLog initialEntries={entries} date={date} readOnly />
+      <DailyLog initialEntries={entries} date={date} />
     </div>
   );
 }

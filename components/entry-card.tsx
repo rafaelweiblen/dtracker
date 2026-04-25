@@ -5,12 +5,18 @@ import { Pencil, Trash2 } from "lucide-react";
 import type { Entry } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
-function formatTime(date: Date | null) {
+function formatDateTime(date: Date | null) {
   if (!date) return "";
-  return new Intl.DateTimeFormat("pt-BR", {
+  const d = new Date(date);
+  const datePart = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+  }).format(d);
+  const timePart = new Intl.DateTimeFormat("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(date));
+  }).format(d);
+  return `${datePart} · ${timePart}`;
 }
 
 interface EntryCardProps {
@@ -21,6 +27,7 @@ interface EntryCardProps {
 
 export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
   const [actionsVisible, setActionsVisible] = useState(false);
+  const [hoverVisible, setHoverVisible] = useState(false);
   const touchStartX = useRef(0);
 
   function handleTouchStart(e: React.TouchEvent) {
@@ -44,6 +51,8 @@ export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
       className="relative overflow-hidden rounded-xl border"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => setHoverVisible(true)}
+      onMouseLeave={() => setHoverVisible(false)}
     >
       {/* action buttons revealed by swipe */}
       <div className="absolute inset-y-0 right-0 flex">
@@ -67,17 +76,24 @@ export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
       <div
         className={cn(
           "relative flex items-start gap-3 bg-background p-4 transition-transform",
-          actionsVisible && "-translate-x-32"
+          (actionsVisible || hoverVisible) && "-translate-x-32"
         )}
         onClick={() => actionsVisible && setActionsVisible(false)}
       >
-        <span className="mt-0.5 text-xl" aria-hidden>
-          {entry.type === "escape" ? "🍕" : "🏃"}
-        </span>
-        <div className="flex flex-1 flex-col gap-0.5 overflow-hidden">
+        <div className="flex flex-1 flex-col gap-1 overflow-hidden">
+          <span
+            className={cn(
+              "self-start rounded-full px-2 py-0.5 text-xs font-medium",
+              entry.type === "escape"
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
+            )}
+          >
+            {entry.type === "escape" ? "Escapada" : "Exercício"}
+          </span>
           <p className="break-words text-sm">{entry.description}</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{formatTime(entry.createdAt)}</span>
+            <span>{formatDateTime(entry.createdAt)}</span>
             {entry.edited && <span>· editado</span>}
             {entry.pendingSync && <span>· ⏳</span>}
           </div>

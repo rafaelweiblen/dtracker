@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MonthGrid } from "./month-grid";
 import type { DaySummary } from "@/db/queries/entries";
@@ -37,9 +37,18 @@ export function CalendarView({ initialSummary, today }: CalendarViewProps) {
     [currentMonth]: initialSummary,
   });
 
+  useEffect(() => {
+    fetch(`/api/calendar/${currentMonth}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) setSummaries((prev) => ({ ...prev, [currentMonth]: data }));
+      })
+      .catch(() => {});
+  }, [currentMonth]);
+
   async function navigate(target: string) {
     setMonth(target);
-    if (!summaries[target]) {
+    if (!summaries[target] || target === currentMonth) {
       const res = await fetch(`/api/calendar/${target}`);
       if (res.ok) {
         const data = await res.json();

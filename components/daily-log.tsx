@@ -14,7 +14,7 @@ interface DailyLogProps {
   readOnly?: boolean;
 }
 
-export function DailyLog({ initialEntries, date: _date, readOnly = false }: DailyLogProps) {
+export function DailyLog({ initialEntries, date, readOnly = false }: DailyLogProps) {
   const [optimisticEntries, addOptimistic] = useOptimistic(
     initialEntries,
     (state, newEntry: Entry) => [newEntry, ...state]
@@ -36,9 +36,12 @@ export function DailyLog({ initialEntries, date: _date, readOnly = false }: Dail
   return (
     <div className="flex flex-col gap-6">
       {isEmpty ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">
-          Nenhum registro hoje ainda.
-        </p>
+        <div className="py-12 text-center">
+          <p className="text-base font-medium">Nenhum registro ainda</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Toque no + para registrar uma escapada ou exercício
+          </p>
+        </div>
       ) : (
         <>
           <EntrySection
@@ -60,6 +63,7 @@ export function DailyLog({ initialEntries, date: _date, readOnly = false }: Dail
         <LogFAB
           onNewEntry={(e) => addOptimistic(e)}
           enqueue={enqueue}
+          initialDate={date}
         />
       )}
 

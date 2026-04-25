@@ -1,5 +1,6 @@
 "use client";
 
+import { UtensilsCrossed, Dumbbell } from "lucide-react";
 import type { Entry, EntryType } from "@/db/schema";
 import { EntryCard } from "./entry-card";
 
@@ -10,9 +11,9 @@ interface EntrySectionProps {
   onDelete: (id: string) => void;
 }
 
-const LABELS: Record<EntryType, string> = {
-  escape: "🍕 Escapadas",
-  exercise: "🏃 Exercícios",
+const LABELS: Record<EntryType, { icon: React.ReactNode; text: string }> = {
+  escape: { icon: <UtensilsCrossed size={14} />, text: "Escapadas" },
+  exercise: { icon: <Dumbbell size={14} />, text: "Exercícios" },
 };
 
 export function EntrySection({ type, entries, onEdit, onDelete }: EntrySectionProps) {
@@ -23,9 +24,13 @@ export function EntrySection({ type, entries, onEdit, onDelete }: EntrySectionPr
       new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
   );
 
+  const { icon, text } = LABELS[type];
+
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-medium text-muted-foreground">{LABELS[type]}</h2>
+      <h2 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        {icon}{text}
+      </h2>
       {sorted.map((entry) => (
         <EntryCard key={entry.id} entry={entry} onEdit={onEdit} onDelete={onDelete} />
       ))}

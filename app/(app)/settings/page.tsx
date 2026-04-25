@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/sign-out-button";
+import { FixDatesButton } from "@/components/fix-dates-button";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -29,6 +30,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+      <FixDatesButton />
       <SignOutButton />
     </div>
   );

@@ -15,24 +15,16 @@ export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: Day
   const inner = (
     <div
       className={cn(
-        "flex flex-col items-center gap-1 rounded-lg p-1",
-        isToday && "bg-primary/10 font-semibold",
+        "flex flex-col items-center justify-center gap-0.5 size-8 rounded-lg text-sm",
+        isToday && "ring-2 ring-green-600 font-semibold",
         isFuture && "opacity-30"
       )}
     >
-      <span className={cn("text-sm leading-none", isToday && "text-primary")}>
-        {day}
-      </span>
+      <span>{day}</span>
       <div className="flex gap-0.5">
-        {hasEscape && (
-          <span className="size-1.5 rounded-full bg-red-500" aria-label="escapada" />
-        )}
-        {hasExercise && (
-          <span className="size-1.5 rounded-full bg-green-500" aria-label="exercício" />
-        )}
-        {!hasEscape && !hasExercise && (
-          <span className="size-1.5" aria-hidden />
-        )}
+        {hasEscape && <span className="size-1.5 rounded-full bg-red-500" />}
+        {hasExercise && <span className="size-1.5 rounded-full bg-green-500" />}
+        {!hasEscape && !hasExercise && <span className="size-1.5" />}
       </div>
     </div>
   );

@@ -28,10 +28,15 @@ async function requireUserId(): Promise<string> {
 export async function createEntry(input: {
   type: EntryType;
   description: string;
+  date?: string;
 }): Promise<Entry> {
   const userId = await requireUserId();
   const description = validateDescription(input.description);
   const now = new Date();
+  const date =
+    input.date && /^\d{4}-\d{2}-\d{2}$/.test(input.date)
+      ? input.date
+      : now.toISOString().slice(0, 10);
 
   const [entry] = await db
     .insert(entries)
@@ -40,13 +45,14 @@ export async function createEntry(input: {
       userId,
       type: input.type,
       description,
-      date: now.toISOString().slice(0, 10),
+      date,
       createdAt: now,
       updatedAt: now,
     })
     .returning();
 
   revalidatePath("/home");
+  revalidatePath("/calendar");
   return entry;
 }
 
@@ -66,7 +72,34 @@ export async function updateEntry(
   if (!entry) throw new Error("Registro não encontrado");
 
   revalidatePath("/home");
+  revalidatePath("/calendar");
   return entry;
+}
+
+function localDateFromTs(ts: Date, offsetMinutes: number): string {
+  const localMs = new Date(ts).getTime() - offsetMinutes * 60 * 1000;
+  return new Date(localMs).toISOString().slice(0, 10);
+}
+
+export async function fixEntryDates(offsetMinutes: number): Promise<number> {
+  const userId = await requireUserId();
+  const rows = await db
+    .select({ id: entries.id, date: entries.date, createdAt: entries.createdAt })
+    .from(entries)
+    .where(eq(entries.userId, userId));
+
+  let fixed = 0;
+  for (const row of rows) {
+    const correctDate = localDateFromTs(row.createdAt, offsetMinutes);
+    if (row.date !== correctDate) {
+      await db.update(entries).set({ date: correctDate }).where(eq(entries.id, row.id));
+      fixed++;
+    }
+  }
+
+  revalidatePath("/home");
+  revalidatePath("/calendar");
+  return fixed;
 }
 
 export async function deleteEntry(id: string): Promise<void> {
@@ -80,4 +113,5 @@ export async function deleteEntry(id: string): Promise<void> {
   if (!deleted.length) throw new Error("Registro não encontrado");
 
   revalidatePath("/home");
+  revalidatePath("/calendar");
 }

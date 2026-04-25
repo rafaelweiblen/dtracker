@@ -17,6 +17,9 @@ importers:
       '@libsql/client':
         specifier: ^0.17.2
         version: 0.17.2
+      '@rolldown/binding-darwin-arm64':
+        specifier: 1.0.0-rc.16
+        version: 1.0.0-rc.16
       '@serwist/next':
         specifier: ^9.5.7
         version: 9.5.7(next@16.2.4(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
@@ -4114,8 +4117,7 @@ snapshots:
   '@rolldown/binding-android-arm64@1.0.0-rc.16':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-rc.16':
-    optional: true
+  '@rolldown/binding-darwin-arm64@1.0.0-rc.16': {}
 
   '@rolldown/binding-darwin-x64@1.0.0-rc.16':
     optional: true

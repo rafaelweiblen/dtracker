@@ -40,7 +40,7 @@ export function useSyncQueue() {
       for (const entry of all) {
         if (entry.status === "failed") continue;
         try {
-          await createEntry({ type: entry.type, description: entry.description });
+          await createEntry({ type: entry.type, description: entry.description, date: entry.date });
           await db.delete(STORE, entry.id);
         } catch {
           const retries = entry.retries + 1;
