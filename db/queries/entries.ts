@@ -105,13 +105,13 @@ export async function getMonthSummary(
   return computeMonthSummary(rows);
 }
 
-export async function getStreaks(userId: string): Promise<Streaks> {
+export async function getStreaks(userId: string, today?: string): Promise<Streaks> {
   const rows = await db
     .select({ date: entries.date, type: entries.type })
     .from(entries)
     .where(eq(entries.userId, userId))
     .orderBy(desc(entries.date));
 
-  const today = new Date().toISOString().slice(0, 10);
-  return computeStreaks(rows, today);
+  const resolvedToday = today ?? new Date().toISOString().slice(0, 10);
+  return computeStreaks(rows, resolvedToday);
 }

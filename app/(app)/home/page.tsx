@@ -30,7 +30,7 @@ export default async function HomePage({
 
   const [entries, streaks] = await Promise.all([
     getEntriesForDate(session.user.id, today),
-    getStreaks(session.user.id),
+    getStreaks(session.user.id, today),
   ]);
 
   return (
