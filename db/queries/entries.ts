@@ -25,6 +25,12 @@ export type Streaks = {
   daysSinceEscape: number | null;
 };
 
+export type StreakRun = {
+  startDate: string;
+  endDate: string;
+  length: number;
+};
+
 // ---------- pure helpers (exported for unit tests) ----------
 
 export function computeMonthSummary(
@@ -78,6 +84,39 @@ export function computeStreaks(
   return { exerciseStreak, daysSinceEscape };
 }
 
+export function computeStreakHistory(
+  rows: Pick<Entry, "date" | "type">[],
+  today: string
+): StreakRun[] {
+  const dates = [
+    ...new Set(
+      rows.filter((r) => r.type === "exercise").map((r) => r.date)
+    ),
+  ].sort();
+
+  if (dates.length === 0) return [];
+
+  const runs: StreakRun[] = [];
+  let start = dates[0];
+  let end = dates[0];
+
+  for (let i = 1; i < dates.length; i++) {
+    const expected = isoOffset(end, 1);
+    if (dates[i] === expected) {
+      end = dates[i];
+    } else {
+      runs.push({ startDate: start, endDate: end, length: daysBetween(start, end) + 1 });
+      start = dates[i];
+      end = dates[i];
+    }
+  }
+  runs.push({ startDate: start, endDate: end, length: daysBetween(start, end) + 1 });
+
+  // Active streak: ends today or yesterday — already included via date grouping
+  // Sort by length desc, return top 3
+  return runs.sort((a, b) => b.length - a.length).slice(0, 3);
+}
+
 function isoOffset(iso: string, days: number): string {
   const d = new Date(`${iso}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -114,4 +153,15 @@ export async function getStreaks(userId: string, today?: string): Promise<Streak
 
   const resolvedToday = today ?? new Date().toISOString().slice(0, 10);
   return computeStreaks(rows, resolvedToday);
+}
+
+export async function getStreakHistory(userId: string, today?: string): Promise<StreakRun[]> {
+  const rows = await db
+    .select({ date: entries.date, type: entries.type })
+    .from(entries)
+    .where(eq(entries.userId, userId))
+    .orderBy(desc(entries.date));
+
+  const resolvedToday = today ?? new Date().toISOString().slice(0, 10);
+  return computeStreakHistory(rows, resolvedToday);
 }
