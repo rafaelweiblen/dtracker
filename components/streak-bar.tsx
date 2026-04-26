@@ -17,7 +17,7 @@ export function StreakBar({ exerciseStreak, daysSinceEscape }: StreakBarProps) {
         <span className="text-xs text-muted-foreground">dias consecutivos de exercício</span>
       </Link>
 
-      <div className="flex flex-1 flex-col gap-0.5 rounded-xl border p-3">
+      <Link href="/escape-ranking" className="flex flex-1 flex-col gap-0.5 rounded-xl border p-3 active:opacity-70">
         {daysSinceEscape === null ? (
           <>
             <PartyPopper size={24} className="text-green-600" />
@@ -34,7 +34,7 @@ export function StreakBar({ exerciseStreak, daysSinceEscape }: StreakBarProps) {
             <span className="text-xs text-muted-foreground">dias desde a última escapada</span>
           </>
         )}
-      </div>
+      </Link>
     </div>
   );
 }

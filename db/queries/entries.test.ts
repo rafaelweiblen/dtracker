@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeMonthSummary, computeStreaks, computeStreakHistory } from "./entries";
+import { computeMonthSummary, computeStreaks, computeStreakHistory, computeEscapeFreeHistory } from "./entries";
 
 // helpers
 const row = (date: string, type: "escape" | "exercise") => ({ date, type });
@@ -138,5 +138,90 @@ describe("computeStreakHistory", () => {
     expect(result).toHaveLength(2);
     expect(result[0].length).toBe(1);
     expect(result[1].length).toBe(1);
+  });
+});
+
+describe("computeEscapeFreeHistory", () => {
+  const today = "2025-04-20";
+
+  it("returns empty array when no entries at all", () => {
+    expect(computeEscapeFreeHistory([], today)).toEqual([]);
+  });
+
+  it("returns single run from first entry to today when no escapes", () => {
+    const rows = [
+      row("2025-04-10", "exercise"),
+      row("2025-04-15", "exercise"),
+    ];
+    const result = computeEscapeFreeHistory(rows, today);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({ startDate: "2025-04-10", endDate: "2025-04-20", length: 11 });
+  });
+
+  it("gap between two escapes forms an escape-free run", () => {
+    // escape Apr 1, exercise Apr 3-5, escape Apr 8
+    // escape-free: Apr 2–7 = 6 days
+    const rows = [
+      row("2025-04-01", "escape"),
+      row("2025-04-03", "exercise"),
+      row("2025-04-08", "escape"),
+    ];
+    const result = computeEscapeFreeHistory(rows, today);
+    const gap = result.find((r) => r.startDate === "2025-04-02");
+    expect(gap).toBeDefined();
+    expect(gap!.length).toBe(6);
+  });
+
+  it("current period after last escape is included", () => {
+    // last escape Apr 10, today Apr 20 → 10 days escape-free
+    const rows = [row("2025-04-10", "escape")];
+    const result = computeEscapeFreeHistory(rows, today);
+    const current = result.find((r) => r.endDate === today);
+    expect(current).toBeDefined();
+    expect(current!.length).toBe(10);
+  });
+
+  it("period before first escape is included when first entry predates it", () => {
+    // first entry (exercise) Apr 1, first escape Apr 6 → 5 pre-escape days
+    const rows = [
+      row("2025-04-01", "exercise"),
+      row("2025-04-06", "escape"),
+    ];
+    const result = computeEscapeFreeHistory(rows, today);
+    const pre = result.find((r) => r.startDate === "2025-04-01");
+    expect(pre).toBeDefined();
+    expect(pre!.length).toBe(5);
+    expect(pre!.endDate).toBe("2025-04-05");
+  });
+
+  it("returns top 3 when more than 3 runs exist", () => {
+    // escapes on Jan 1, Feb 1, Mar 1, Apr 1
+    // gaps: Jan2–Jan31=30, Feb2–Feb28=27, Mar2–Mar31=29, Apr2–today=19
+    const rows = [
+      row("2025-01-01", "escape"),
+      row("2025-02-01", "escape"),
+      row("2025-03-01", "escape"),
+      row("2025-04-01", "escape"),
+    ];
+    const result = computeEscapeFreeHistory(rows, today);
+    expect(result).toHaveLength(3);
+    expect(result[0].length).toBe(30); // Jan 2–31 (30 dias)
+    expect(result[1].length).toBe(30); // Mar 2–31 (30 dias)
+    expect(result[2].length).toBe(27); // Feb 2–28 (27 dias)
+  });
+
+  it("skips gap of 0 when two escapes are on consecutive days", () => {
+    const rows = [
+      row("2025-04-10", "escape"),
+      row("2025-04-11", "escape"),
+    ];
+    const result = computeEscapeFreeHistory(rows, today);
+    // no gap between Apr10 and Apr11; only current period Apr12–Apr20 = 9 days
+    const betweenGap = result.find(
+      (r) => r.startDate === "2025-04-11" || r.startDate === "2025-04-10"
+    );
+    expect(betweenGap).toBeUndefined();
+    const current = result.find((r) => r.endDate === today);
+    expect(current!.length).toBe(9);
   });
 });

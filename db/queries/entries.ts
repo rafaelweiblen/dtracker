@@ -117,6 +117,67 @@ export function computeStreakHistory(
   return runs.sort((a, b) => b.length - a.length).slice(0, 3);
 }
 
+export function computeEscapeFreeHistory(
+  rows: Pick<Entry, "date" | "type">[],
+  today: string
+): StreakRun[] {
+  const escapeDates = [
+    ...new Set(rows.filter((r) => r.type === "escape").map((r) => r.date)),
+  ].sort();
+
+  const runs: StreakRun[] = [];
+
+  if (escapeDates.length === 0) {
+    const allDates = [...new Set(rows.map((r) => r.date))].sort();
+    if (allDates.length > 0) {
+      runs.push({
+        startDate: allDates[0],
+        endDate: today,
+        length: daysBetween(allDates[0], today) + 1,
+      });
+    }
+    return runs;
+  }
+
+  // Period before first escape
+  const allDates = [...new Set(rows.map((r) => r.date))].sort();
+  if (allDates.length > 0 && allDates[0] < escapeDates[0]) {
+    const preLength = daysBetween(allDates[0], escapeDates[0]);
+    if (preLength > 0) {
+      runs.push({
+        startDate: allDates[0],
+        endDate: isoOffset(escapeDates[0], -1),
+        length: preLength,
+      });
+    }
+  }
+
+  // Gaps between consecutive escapes
+  for (let i = 0; i < escapeDates.length - 1; i++) {
+    const gap = daysBetween(escapeDates[i], escapeDates[i + 1]) - 1;
+    if (gap > 0) {
+      runs.push({
+        startDate: isoOffset(escapeDates[i], 1),
+        endDate: isoOffset(escapeDates[i + 1], -1),
+        length: gap,
+      });
+    }
+  }
+
+  // Current ongoing escape-free period (after last escape)
+  const lastEscape = escapeDates[escapeDates.length - 1];
+  const currentLength = daysBetween(lastEscape, today);
+  if (currentLength > 0) {
+    runs.push({
+      startDate: isoOffset(lastEscape, 1),
+      endDate: today,
+      length: currentLength,
+    });
+  }
+
+  return runs.sort((a, b) => b.length - a.length).slice(0, 3);
+}
+
 function isoOffset(iso: string, days: number): string {
   const d = new Date(`${iso}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -153,6 +214,17 @@ export async function getStreaks(userId: string, today?: string): Promise<Streak
 
   const resolvedToday = today ?? new Date().toISOString().slice(0, 10);
   return computeStreaks(rows, resolvedToday);
+}
+
+export async function getEscapeFreeHistory(userId: string, today?: string): Promise<StreakRun[]> {
+  const rows = await db
+    .select({ date: entries.date, type: entries.type })
+    .from(entries)
+    .where(eq(entries.userId, userId))
+    .orderBy(desc(entries.date));
+
+  const resolvedToday = today ?? new Date().toISOString().slice(0, 10);
+  return computeEscapeFreeHistory(rows, resolvedToday);
 }
 
 export async function getStreakHistory(userId: string, today?: string): Promise<StreakRun[]> {
