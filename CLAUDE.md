@@ -15,16 +15,21 @@ Toda implementação de feature, correção de bug ou mudança de comportamento 
 
 ## Migrações de banco de dados em produção
 
-**NUNCA use `.env.local` para rodar migrações em produção.** O `.env.local` pode apontar para um banco Turso diferente do que a Vercel usa. Isso já causou uma outage em produção (tabela `weights` não existia no banco correto).
+**NUNCA use `.env.local` para rodar migrações em produção.** O banco de produção é o Turso `dieta-prod`. O `vercel env pull` retorna credenciais vazias para esse projeto e NÃO deve ser usado para migrações.
 
 Sempre que houver mudança de schema, execute:
 
 ```bash
-vercel env pull .env.production.local --environment production --yes && \
-  TURSO_DATABASE_URL=$(grep TURSO_DATABASE_URL .env.production.local | cut -d= -f2-) \
-  TURSO_AUTH_TOKEN=$(grep TURSO_AUTH_TOKEN .env.production.local | cut -d= -f2-) \
-  pnpm db:migrate && \
-  rm .env.production.local
+cd app && \
+  TURSO_DATABASE_URL="libsql://dieta-prod-rafaelweiblen.aws-us-east-1.turso.io" \
+  TURSO_AUTH_TOKEN=$(turso db tokens create dieta-prod) \
+  pnpm db:migrate
 ```
 
-Execute esse comando **antes do deploy** para garantir que o banco de produção esteja atualizado quando o código novo chegar.
+Para verificar as tabelas existentes no banco de produção:
+
+```bash
+turso db shell dieta-prod "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+```
+
+Execute a migração **antes do deploy** para garantir que o banco de produção esteja atualizado quando o código novo chegar.
