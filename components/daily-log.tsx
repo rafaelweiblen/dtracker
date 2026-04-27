@@ -12,10 +12,11 @@ interface DailyLogProps {
   initialEntries: Entry[];
   date: string;
   readOnly?: boolean;
+  currentWeight?: number | null;
   onWeightSaved?: (weight: number) => void;
 }
 
-export function DailyLog({ initialEntries, date, readOnly = false, onWeightSaved }: DailyLogProps) {
+export function DailyLog({ initialEntries, date, readOnly = false, currentWeight, onWeightSaved }: DailyLogProps) {
   const [optimisticEntries, addOptimistic] = useOptimistic(
     initialEntries,
     (state, newEntry: Entry) => [newEntry, ...state]
@@ -66,6 +67,7 @@ export function DailyLog({ initialEntries, date, readOnly = false, onWeightSaved
           onWeightSaved={onWeightSaved}
           enqueue={enqueue}
           initialDate={date}
+          currentWeight={currentWeight}
         />
       )}
 

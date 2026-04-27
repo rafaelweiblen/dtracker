@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WeightCard } from "./weight-card";
 import { DailyLog } from "./daily-log";
 import type { Entry } from "@/db/schema";
@@ -20,12 +20,23 @@ export function HomeClientWrapper({
 }: HomeClientWrapperProps) {
   const [todayWeight, setTodayWeight] = useState(initialTodayWeight);
 
+  useEffect(() => {
+    const month = date.slice(0, 7);
+    fetch(`/api/weight/${month}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: Record<string, number> | null) => {
+        if (data) setTodayWeight(data[date] ?? null);
+      })
+      .catch(() => {});
+  }, [date]);
+
   return (
     <>
       <WeightCard weight={todayWeight} previousWeight={previousWeight} />
       <DailyLog
         initialEntries={initialEntries}
         date={date}
+        currentWeight={todayWeight}
         onWeightSaved={setTodayWeight}
       />
     </>

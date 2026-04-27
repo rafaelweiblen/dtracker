@@ -11,9 +11,10 @@ interface LogFABProps {
   onWeightSaved?: (weight: number) => void;
   enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
   initialDate?: string;
+  currentWeight?: number | null;
 }
 
-export function LogFAB({ onNewEntry, onWeightSaved, enqueue, initialDate }: LogFABProps) {
+export function LogFAB({ onNewEntry, onWeightSaved, enqueue, initialDate, currentWeight }: LogFABProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,6 +33,7 @@ export function LogFAB({ onNewEntry, onWeightSaved, enqueue, initialDate }: LogF
         onWeightSaved={onWeightSaved}
         enqueue={enqueue}
         initialDate={initialDate}
+        currentWeight={currentWeight}
       />
     </>
   );

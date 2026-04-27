@@ -17,6 +17,7 @@ interface LogBottomSheetProps {
   onWeightSaved?: (weight: number) => void;
   enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
   initialDate?: string;
+  currentWeight?: number | null;
 }
 
 export function LogBottomSheet({
@@ -26,6 +27,7 @@ export function LogBottomSheet({
   onWeightSaved,
   enqueue,
   initialDate,
+  currentWeight,
 }: LogBottomSheetProps) {
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(null);
 
@@ -80,6 +82,7 @@ export function LogBottomSheet({
           }}
           onBack={() => setSelectedMode(null)}
           date={initialDate}
+          initialWeight={currentWeight}
         />
       ) : (
         <EntryForm
