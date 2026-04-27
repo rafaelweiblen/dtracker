@@ -8,11 +8,12 @@ import type { PendingEntry } from "@/types/offline";
 
 interface LogFABProps {
   onNewEntry?: (entry: Entry) => void;
+  onWeightSaved?: (weight: number) => void;
   enqueue?: (entry: Omit<PendingEntry, "retries" | "status">) => Promise<void>;
   initialDate?: string;
 }
 
-export function LogFAB({ onNewEntry, enqueue, initialDate }: LogFABProps) {
+export function LogFAB({ onNewEntry, onWeightSaved, enqueue, initialDate }: LogFABProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -28,6 +29,7 @@ export function LogFAB({ onNewEntry, enqueue, initialDate }: LogFABProps) {
         open={open}
         onClose={() => setOpen(false)}
         onNewEntry={onNewEntry}
+        onWeightSaved={onWeightSaved}
         enqueue={enqueue}
         initialDate={initialDate}
       />

@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { getEntriesForDate, getStreaks } from "@/db/queries/entries";
-import { DailyLog } from "@/components/daily-log";
+import { getWeightWithPrevious } from "@/db/queries/weights";
 import { StreakBar } from "@/components/streak-bar";
 import { DateSync } from "@/components/date-sync";
+import { HomeClientWrapper } from "@/components/home-client-wrapper";
 import { redirect } from "next/navigation";
 
 function formatDate(iso: string) {
@@ -28,9 +29,10 @@ export default async function HomePage({
       ? dateParam
       : new Date().toISOString().slice(0, 10);
 
-  const [entries, streaks] = await Promise.all([
+  const [entries, streaks, weightData] = await Promise.all([
     getEntriesForDate(session.user.id, today),
     getStreaks(session.user.id, today),
+    getWeightWithPrevious(session.user.id, today),
   ]);
 
   return (
@@ -41,7 +43,12 @@ export default async function HomePage({
         exerciseStreak={streaks.exerciseStreak}
         daysSinceEscape={streaks.daysSinceEscape}
       />
-      <DailyLog initialEntries={entries} date={today} />
+      <HomeClientWrapper
+        initialTodayWeight={weightData.today}
+        previousWeight={weightData.previous}
+        initialEntries={entries}
+        date={today}
+      />
     </div>
   );
 }

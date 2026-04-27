@@ -15,6 +15,13 @@
       "when": 1776734375197,
       "tag": "0001_accounts_composite_pk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777248054381,
+      "tag": "0002_spicy_thunderball",
+      "breakpoints": true
     }
   ]
 }

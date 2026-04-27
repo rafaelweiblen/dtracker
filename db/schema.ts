@@ -2,8 +2,10 @@ import {
   index,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
 // Auth.js requires: id, name, email, emailVerified, image
@@ -65,6 +67,25 @@ export const entries = sqliteTable(
   (t) => [index("idx_entries_user_date").on(t.userId, t.date)]
 );
 
+export const weights = sqliteTable(
+  "weights",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    weight: real("weight").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => [
+    index("idx_weights_user_date").on(t.userId, t.date),
+    uniqueIndex("uq_weights_user_date").on(t.userId, t.date),
+  ]
+);
+
 export type User = typeof users.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type EntryType = "escape" | "exercise";
+export type Weight = typeof weights.$inferSelect;
