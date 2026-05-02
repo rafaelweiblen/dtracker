@@ -9,8 +9,10 @@ interface WeightCardProps {
 }
 
 export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) {
-  const diff =
-    weight != null && previousWeight != null ? weight - previousWeight : null;
+  const hasToday = weight != null;
+  const isStale = !hasToday && previousWeight != null;
+  const displayWeight = hasToday ? weight : previousWeight;
+  const diff = hasToday && previousWeight != null ? weight - previousWeight : null;
 
   return (
     <div className="flex flex-col gap-0.5 rounded-xl border p-3">
@@ -20,10 +22,10 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
           className="flex flex-1 items-center gap-1.5 active:opacity-70"
         >
           <Scale size={18} className="text-blue-500" />
-          {weight != null ? (
+          {displayWeight != null ? (
             <>
-              <span className="text-2xl font-bold leading-none">
-                {weight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
+              <span className={cn("text-2xl font-bold leading-none", isStale && "text-muted-foreground")}>
+                {displayWeight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
               </span>
               <span className="text-sm text-muted-foreground">kg</span>
             </>
@@ -46,7 +48,7 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
               </span>
             </div>
           )}
-          {weight != null && onEdit && (
+          {(hasToday || isStale) && onEdit && (
             <button
               onClick={onEdit}
               aria-label="Editar peso"
@@ -59,7 +61,11 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
       </div>
       <Link href="/weight" className="active:opacity-70">
         <span className="text-xs text-muted-foreground">
-          {weight != null ? "peso de hoje" : "Toque em + para registrar seu peso"}
+          {hasToday
+            ? "peso de hoje"
+            : isStale
+            ? "último peso registrado"
+            : "Toque em + para registrar seu peso"}
         </span>
       </Link>
     </div>
