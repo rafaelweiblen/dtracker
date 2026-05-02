@@ -24,10 +24,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Instalar dependências
-        working-directory: app
         run: pnpm install --frozen-lockfile
 
   typecheck:
@@ -48,14 +47,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Instalar dependências
-        working-directory: app
         run: pnpm install --frozen-lockfile
 
       - name: Verificar tipos
-        working-directory: app
         run: pnpm tsc --noEmit
 
   test:
@@ -76,14 +73,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Instalar dependências
-        working-directory: app
         run: pnpm install --frozen-lockfile
 
       - name: Rodar testes
-        working-directory: app
         run: pnpm test
 
   build:
@@ -104,14 +99,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Instalar dependências
-        working-directory: app
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        working-directory: app
         run: pnpm build
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
@@ -139,17 +132,15 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Instalar dependências
-        working-directory: app
         run: pnpm install --frozen-lockfile
 
       - name: Instalar Vercel CLI
         run: pnpm add -g vercel
 
       - name: Deploy para produção
-        working-directory: app
         run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
