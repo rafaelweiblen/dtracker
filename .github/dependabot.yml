@@ -1,12 +1,11 @@
-# Dependabot — política: agrupar apenas minor+patch; majors ficam em PRs separados (revisão explícita).
-# Segurança: GitHub continua a abrir PRs de Dependabot security updates além destes version updates.
-# Documentação: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot — minor+patch agrupados; majors em PRs separados.
+# Segurança: GitHub continua a abrir Dependabot security updates além destes version updates.
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot-yml-file
 
 version: 2
 updates:
-  # App Next.js (pnpm)
   - package-ecosystem: npm
-    directory: /app
+    directory: /
     schedule:
       interval: weekly
       day: monday
@@ -15,50 +14,18 @@ updates:
     open-pull-requests-limit: 8
     versioning-strategy: increase-if-necessary
     commit-message:
-      prefix: "deps(app)"
+      prefix: "deps"
     labels:
       - dependencies
-      - app
     groups:
-      app-prod-minor-patch:
+      prod-minor-patch:
         dependency-type: production
         patterns:
           - "*"
         update-types:
           - minor
           - patch
-      app-dev-minor-patch:
-        dependency-type: development
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-    # Majores não entram nos grupos acima → um PR por dependência major.
-
-  # Monorepo agent-skills (npm workspaces)
-  - package-ecosystem: npm
-    directory: /agent-skills
-    schedule:
-      interval: weekly
-      day: tuesday
-      time: "09:00"
-      timezone: America/Sao_Paulo
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "deps(agent-skills)"
-    labels:
-      - dependencies
-      - agent-skills
-    groups:
-      skills-prod-minor-patch:
-        dependency-type: production
-        patterns:
-          - "*"
-        update-types:
-          - minor
-          - patch
-      skills-dev-minor-patch:
+      dev-minor-patch:
         dependency-type: development
         patterns:
           - "*"
@@ -66,7 +33,6 @@ updates:
           - minor
           - patch
 
-  # Versões das GitHub Actions usadas em .github/workflows na raiz do repositório
   - package-ecosystem: github-actions
     directory: /
     schedule:

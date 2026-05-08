@@ -7,6 +7,7 @@ import { authConfig } from "./auth.config";
 import { getBypassUserId, isAuthBypass } from "@/lib/auth-bypass";
 
 const nextAuth = NextAuth({
+  // Necessário atrás de proxy (ex.: Vercel). Em self-hosted sem edge de confiança, rever Host.
   trustHost: true,
   secret: process.env.AUTH_SECRET?.trim(),
   ...authConfig,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { WeightCard } from "./weight-card";
 import { DailyLog } from "./daily-log";
 import { EditWeightBottomSheet } from "./edit-weight-bottom-sheet";
@@ -21,16 +21,6 @@ export function HomeClientWrapper({
 }: HomeClientWrapperProps) {
   const [todayWeight, setTodayWeight] = useState(initialTodayWeight);
   const [editingWeight, setEditingWeight] = useState(false);
-
-  useEffect(() => {
-    const month = date.slice(0, 7);
-    fetch(`/api/weight/${month}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: Record<string, number> | null) => {
-        if (data) setTodayWeight(data[date] ?? null);
-      })
-      .catch(() => {});
-  }, [date]);
 
   return (
     <>

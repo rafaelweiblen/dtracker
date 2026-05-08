@@ -6,15 +6,37 @@ import { isAuthBypass } from "@/lib/auth-bypass";
 
 const { auth } = NextAuth(authConfig);
 
-const authMiddleware = auth((req) => {
-  const isAuthenticated = !!req.auth;
-  const isPublicRoute = req.nextUrl.pathname === "/";
+/** Manifest, SEO e ícones — sem sessão; não inclui "/" (landing). */
+function isPublicAssetOrSeoRoute(pathname: string): boolean {
+  if (
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/sw.js" ||
+    pathname.startsWith("/icons/")
+  ) {
+    return true;
+  }
+  return false;
+}
 
-  if (!isAuthenticated && !isPublicRoute) {
+const authMiddleware = auth((req) => {
+  const pathname = req.nextUrl.pathname;
+
+  if (isPublicAssetOrSeoRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  const isAuthenticated = !!req.auth;
+
+  if (!isAuthenticated) {
+    if (pathname === "/") {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  if (isAuthenticated && isPublicRoute) {
+  if (pathname === "/") {
     return NextResponse.redirect(new URL("/home", req.url));
   }
 
@@ -37,6 +59,6 @@ export default function middleware(
 
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|sw\\.js|icons/|.*\\.(?:png|svg|ico|webp|jpg|jpeg|gif)$).*)",
   ],
 };

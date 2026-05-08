@@ -7,10 +7,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   install:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -33,106 +39,66 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     needs: install
-
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Verificar vulnerabilidades
-        run: pnpm audit --audit-level high
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
 
   typecheck:
     runs-on: ubuntu-latest
     needs: install
-
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Verificar tipos
-        run: pnpm tsc --noEmit
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tsc --noEmit
 
   test:
     runs-on: ubuntu-latest
     needs: install
-
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Rodar testes com cobertura
-        run: pnpm test:coverage
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:coverage
 
   build:
     runs-on: ubuntu-latest
     needs: [audit, typecheck, test]
-
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
@@ -144,29 +110,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    permissions:
+      contents: read
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Instalar Vercel CLI
-        run: pnpm add -g vercel
-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm add -g vercel
       - name: Deploy para produção
         run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:

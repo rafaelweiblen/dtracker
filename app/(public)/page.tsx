@@ -5,7 +5,10 @@ export default function LandingPage() {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-8 p-8">
       <div className="flex flex-col items-center gap-3 text-center">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-3xl">
+        <div
+          className="flex size-16 items-center justify-center rounded-2xl bg-primary text-3xl"
+          aria-hidden={true}
+        >
           🥗
         </div>
         <h1 className="text-3xl font-bold tracking-tight">Diet Tracker</h1>

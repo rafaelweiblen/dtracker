@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## CI e Dependabot
+
+O workflow GitHub Actions vive na **raiz do repositório** em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (contexto `app/` via `working-directory`). O [Dependabot](../.github/dependabot.yml) agrupa atualizações **minor** e **patch**; **majors** chegam em PRs separados para revisão explícita.
+
 ## Getting Started
 
 First, run the development server:
