@@ -1,3 +1,11 @@
+/** Garante número em kg; ignora strings/NaN (evita concatenação em `sum + w`). */
+export function parseWeightKg(value: unknown): number | null {
+  if (value == null) return null;
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
 export function addDaysIso(dateStr: string, deltaDays: number): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m - 1, d + deltaDays);
@@ -17,39 +25,39 @@ export function windowStartDate(today: string): string {
   return addDaysIso(today, -6);
 }
 
-/** Escala vertical — passo 20 kg “para cima”; passo 30 kg em simultâneo. */
-export const Y_AXIS_STEP_20_KG = 20;
-export const Y_AXIS_STEP_30_KG = 30;
-
-/** Sem dados na janela: eixo 0 … este teto (marcas 20/30). */
-export const EMPTY_CHART_MAX_KG = 120;
+/** Margem acima/abaixo do menor/maior peso na janela de 7 dias. */
+export const Y_AXIS_PADDING_KG = 10;
+/** Marcação principal do eixo Y. */
+export const Y_AXIS_TICK_STEP_KG = 10;
 
 export interface ChartYDomain {
   minKg: number;
   maxKg: number;
 }
 
-/**
- * Teto do gráfico sem limite fixo: o maior valor entre o teto por múltiplos de 20
- * e o por múltiplos de 30 acima do maior peso registado.
- */
 export function computeChartYDomain(
   dates: string[],
   weights: Record<string, number>
 ): ChartYDomain {
   const values = dates
-    .map((d) => weights[d])
-    .filter((w): w is number => w != null && w > 0);
+    .map((d) => parseWeightKg(weights[d]))
+    .filter((w): w is number => w != null);
+
   if (values.length === 0) {
-    return { minKg: 0, maxKg: EMPTY_CHART_MAX_KG };
+    return { minKg: 0, maxKg: Y_AXIS_TICK_STEP_KG * 2 };
   }
-  const peak = Math.max(...values);
-  const topBy20 =
-    Math.ceil(peak / Y_AXIS_STEP_20_KG) * Y_AXIS_STEP_20_KG;
-  const topBy30 =
-    Math.ceil(peak / Y_AXIS_STEP_30_KG) * Y_AXIS_STEP_30_KG;
-  const maxKg = Math.max(topBy20, topBy30, Y_AXIS_STEP_20_KG, Y_AXIS_STEP_30_KG);
-  return { minKg: 0, maxKg };
+  const averageWeight =
+    values.reduce((sum, w) => sum + w, 0) / values.length;
+  const rawMin = Math.max(0, averageWeight - Y_AXIS_PADDING_KG);
+  const rawMax = averageWeight + Y_AXIS_PADDING_KG;
+  /** Inteiros evitam marcas tipo 71,81428571428572 no SVG (artefatos visuais ".428572"). */
+  const minKg = Math.floor(rawMin);
+  const maxKg = Math.max(
+    Math.ceil(rawMax),
+    minKg + Y_AXIS_TICK_STEP_KG
+  );
+
+  return { minKg, maxKg };
 }
 
 /**
@@ -95,8 +103,8 @@ export function buildChartPoints(
   const raw: ChartPoint[] = [];
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
-    const w = weights[date];
-    if (w == null || !(w > 0)) continue;
+    const w = parseWeightKg(weights[date]);
+    if (w == null) continue;
     const x = plotLeft + (i / 6) * plotWidth;
     const y = weightToSvgY(w, plotTop, plotBottom, minKg, maxKg);
     raw.push({ date, index: i, weight: w, x, y });
@@ -108,22 +116,22 @@ export function polylinePointsString(points: ChartPoint[]): string {
   return points.map((p) => `${p.x},${p.y}`).join(" ");
 }
 
-/**
- * Marcas do eixo Y: união dos múltiplos de 20 e de 30 dentro de [minKg, maxKg].
- */
 export function yAxisTickValuesKg(minKg: number, maxKg: number): number[] {
-  const set = new Set<number>();
-  let k = Math.ceil(minKg / Y_AXIS_STEP_20_KG - 1e-9) * Y_AXIS_STEP_20_KG;
-  for (; k <= maxKg; k += Y_AXIS_STEP_20_KG) {
-    set.add(k);
+  const ticks: number[] = [];
+  const minI = Math.round(minKg);
+  const maxI = Math.round(maxKg);
+  const start =
+    Math.ceil(minI / Y_AXIS_TICK_STEP_KG) * Y_AXIS_TICK_STEP_KG;
+  for (let k = start; k <= maxI; k += Y_AXIS_TICK_STEP_KG) {
+    ticks.push(k);
   }
-  k = Math.ceil(minKg / Y_AXIS_STEP_30_KG - 1e-9) * Y_AXIS_STEP_30_KG;
-  for (; k <= maxKg; k += Y_AXIS_STEP_30_KG) {
-    set.add(k);
-  }
-  set.add(minKg);
-  set.add(maxKg);
-  return [...set]
-    .filter((v) => v >= minKg - 1e-9 && v <= maxKg + 1e-9)
-    .sort((a, b) => a - b);
+  if (!ticks.includes(minI)) ticks.unshift(minI);
+  if (!ticks.includes(maxI)) ticks.push(maxI);
+  return [...new Set(ticks)].sort((a, b) => a - b);
+}
+
+/** Rótulo do eixo Y: só inteiros ou uma casa decimal. */
+export function formatYAxisKgLabel(kg: number): string {
+  if (Number.isInteger(kg)) return String(kg);
+  return kg.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 }

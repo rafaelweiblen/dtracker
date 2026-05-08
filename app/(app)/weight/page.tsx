@@ -5,7 +5,7 @@ import { windowStartDate } from "@/lib/weight-seven-day-chart";
 import { DateSync } from "@/components/date-sync";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Scale } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export default async function WeightPage({
   searchParams,
@@ -35,12 +35,9 @@ export default async function WeightPage({
         <h1 className="text-2xl font-bold">Histórico de Peso</h1>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Scale size={16} className="text-blue-500" />
-        <span>Últimos 7 dias · escala 0–112 kg · hoje à direita</span>
+      <div className="w-full min-w-0">
+        <WeightSevenDayChart key={today} initialWeights={weights} today={today} />
       </div>
-
-      <WeightSevenDayChart key={today} initialWeights={weights} today={today} />
     </div>
   );
 }

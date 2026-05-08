@@ -7,7 +7,7 @@ import {
   polylinePointsString,
   yAxisTickValuesKg,
   computeChartYDomain,
-  EMPTY_CHART_MAX_KG,
+  Y_AXIS_PADDING_KG,
 } from "@/lib/weight-seven-day-chart";
 
 describe("addDaysIso", () => {
@@ -32,25 +32,66 @@ describe("buildSevenDayDates", () => {
 describe("computeChartYDomain", () => {
   const dates = buildSevenDayDates("2026-05-07");
 
-  it("sem dados usa teto vazio padrão", () => {
+  it("sem dados usa intervalo mínimo de segurança", () => {
     expect(computeChartYDomain(dates, {})).toEqual({
       minKg: 0,
-      maxKg: EMPTY_CHART_MAX_KG,
+      maxKg: 20,
     });
   });
 
-  it("teto = max entre arredondar para cima por 20 e por 30", () => {
+  it("aplica margem de 10kg para baixo e para cima da média da janela", () => {
     expect(computeChartYDomain(dates, { "2026-05-07": 73 })).toEqual({
-      minKg: 0,
-      maxKg: 90,
+      minKg: 63,
+      maxKg: 83,
     });
     expect(computeChartYDomain(dates, { "2026-05-07": 80 })).toEqual({
-      minKg: 0,
+      minKg: 70,
       maxKg: 90,
     });
-    expect(computeChartYDomain(dates, { "2026-05-07": 115 })).toEqual({
+    expect(
+      computeChartYDomain(dates, {
+        "2026-05-01": 82.4,
+        "2026-05-02": 82.1,
+        "2026-05-03": 81.9,
+        "2026-05-04": 81.7,
+        "2026-05-05": 81.8,
+        "2026-05-06": 81.5,
+        "2026-05-07": 81.3,
+      })
+    ).toEqual({
+      // média ≈ 81.81 -> eixo em kg inteiros (evita decimais longos no SVG)
+      minKg: 71,
+      maxKg: 92,
+    });
+  });
+
+  it("usa os dados disponíveis na janela (não precisa ter peso no dia atual)", () => {
+    expect(
+      computeChartYDomain(dates, {
+        "2026-05-05": 80,
+        "2026-05-06": 84,
+      })
+    ).toEqual({
+      minKg: 72,
+      maxKg: 92,
+    });
+  });
+
+  it("não deixa o mínimo abaixo de 0kg", () => {
+    expect(computeChartYDomain(dates, { "2026-05-07": 6 })).toEqual({
       minKg: 0,
-      maxKg: 120,
+      maxKg: 16,
+    });
+  });
+
+  it("coage strings para número (evita média por concatenação tipo 85 + \"90\")", () => {
+    const weights = {
+      "2026-05-05": "80",
+      "2026-05-06": 82,
+    } as unknown as Record<string, number>;
+    expect(computeChartYDomain(dates, weights)).toEqual({
+      minKg: 71,
+      maxKg: 91,
     });
   });
 });
@@ -133,21 +174,25 @@ describe("buildChartPoints & polyline", () => {
 });
 
 describe("yAxisTickValuesKg", () => {
-  it("união de múltiplos de 20 e 30 no intervalo", () => {
-    const ticks = yAxisTickValuesKg(0, 112);
-    expect(ticks).toContain(0);
-    expect(ticks).toContain(20);
-    expect(ticks).toContain(30);
-    expect(ticks).toContain(60);
+  it("gera marcas de 10 em 10 e inclui limites", () => {
+    const ticks = yAxisTickValuesKg(63, 91);
+    expect(ticks).toContain(63);
+    expect(ticks).toContain(70);
+    expect(ticks).toContain(80);
     expect(ticks).toContain(90);
-    expect(ticks).toContain(100);
-    expect(ticks).toContain(112);
+    expect(ticks).toContain(91);
     expect(ticks).toEqual([...ticks].sort((a, b) => a - b));
   });
 
-  it("intervalo curto (p.ex. 0–90)", () => {
-    const ticks = yAxisTickValuesKg(0, 90);
-    expect(ticks[0]).toBe(0);
-    expect(ticks.at(-1)).toBe(90);
+  it("constante de margem é 10kg", () => {
+    expect(Y_AXIS_PADDING_KG).toBe(10);
+  });
+
+  it("intervalo padrão funciona", () => {
+    const ticks = yAxisTickValuesKg(0, 100);
+    expect(ticks).toContain(0);
+    expect(ticks).toContain(10);
+    expect(ticks).toContain(50);
+    expect(ticks).toContain(100);
   });
 });

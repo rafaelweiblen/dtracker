@@ -2,6 +2,12 @@ import { db } from "@/db";
 import { weights } from "@/db/schema";
 import { and, eq, like, desc, lt, gte, lte } from "drizzle-orm";
 
+function rowWeightKg(w: unknown): number | null {
+  if (w == null) return null;
+  const n = Number(w);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function getWeightWithPrevious(
   userId: string,
   date: string
@@ -19,8 +25,8 @@ export async function getWeightWithPrevious(
     .limit(1);
 
   return {
-    today: todayRow?.weight ?? null,
-    previous: previousRow?.weight ?? null,
+    today: rowWeightKg(todayRow?.weight),
+    previous: rowWeightKg(previousRow?.weight),
   };
 }
 
@@ -33,7 +39,14 @@ export async function getWeightsForMonth(
     .from(weights)
     .where(and(eq(weights.userId, userId), like(weights.date, `${month}%`)));
 
-  return Object.fromEntries(rows.map((r) => [r.date, r.weight]));
+  return Object.fromEntries(
+    rows
+      .map((r) => {
+        const w = rowWeightKg(r.weight);
+        return w != null ? ([r.date, w] as const) : null;
+      })
+      .filter((e): e is readonly [string, number] => e != null)
+  );
 }
 
 /** Intervalo inclusivo; datas no formato YYYY-MM-DD (ordem lexicográfica = cronológica). */
@@ -53,5 +66,12 @@ export async function getWeightsBetweenDates(
       )
     );
 
-  return Object.fromEntries(rows.map((r) => [r.date, r.weight]));
+  return Object.fromEntries(
+    rows
+      .map((r) => {
+        const w = rowWeightKg(r.weight);
+        return w != null ? ([r.date, w] as const) : null;
+      })
+      .filter((e): e is readonly [string, number] => e != null)
+  );
 }
