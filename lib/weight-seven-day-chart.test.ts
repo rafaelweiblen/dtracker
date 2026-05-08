@@ -5,7 +5,9 @@ import {
   weightToSvgY,
   buildChartPoints,
   polylinePointsString,
-  CHART_MAX_KG,
+  yAxisTickValuesKg,
+  computeChartYDomain,
+  EMPTY_CHART_MAX_KG,
 } from "@/lib/weight-seven-day-chart";
 
 describe("addDaysIso", () => {
@@ -27,20 +29,48 @@ describe("buildSevenDayDates", () => {
   });
 });
 
+describe("computeChartYDomain", () => {
+  const dates = buildSevenDayDates("2026-05-07");
+
+  it("sem dados usa teto vazio padrão", () => {
+    expect(computeChartYDomain(dates, {})).toEqual({
+      minKg: 0,
+      maxKg: EMPTY_CHART_MAX_KG,
+    });
+  });
+
+  it("teto = max entre arredondar para cima por 20 e por 30", () => {
+    expect(computeChartYDomain(dates, { "2026-05-07": 73 })).toEqual({
+      minKg: 0,
+      maxKg: 90,
+    });
+    expect(computeChartYDomain(dates, { "2026-05-07": 80 })).toEqual({
+      minKg: 0,
+      maxKg: 90,
+    });
+    expect(computeChartYDomain(dates, { "2026-05-07": 115 })).toEqual({
+      minKg: 0,
+      maxKg: 120,
+    });
+  });
+});
+
 describe("weightToSvgY", () => {
   const top = 0;
-  const bottom = 112;
+  const bottom = 100;
+  const min = 0;
+  const max = 100;
 
-  it("0 kg na base (maior Y)", () => {
-    expect(weightToSvgY(0, top, bottom)).toBe(112);
+  it("min na base", () => {
+    expect(weightToSvgY(0, top, bottom, min, max)).toBe(100);
   });
 
-  it("112 kg no topo (menor Y)", () => {
-    expect(weightToSvgY(112, top, bottom)).toBe(0);
+  it("max no topo", () => {
+    expect(weightToSvgY(100, top, bottom, min, max)).toBe(0);
   });
 
-  it("clamp valores acima de 112 ao topo", () => {
-    expect(weightToSvgY(130, top, bottom)).toBe(0);
+  it("valor acima do domínio — clamp ao topo", () => {
+    expect(weightToSvgY(130, top, bottom, min, max)).toBe(0);
   });
 });
 
@@ -49,7 +79,9 @@ describe("buildChartPoints & polyline", () => {
   const plotLeft = 0;
   const plotW = 60;
   const plotTop = 0;
-  const plotBottom = 112;
+  const plotBottom = 100;
+  const minKg = 0;
+  const maxKg = 100;
 
   it("ignora dias sem peso ou peso inválido", () => {
     const pts = buildChartPoints(
@@ -61,7 +93,9 @@ describe("buildChartPoints & polyline", () => {
       plotLeft,
       plotW,
       plotTop,
-      plotBottom
+      plotBottom,
+      minKg,
+      maxKg
     );
     expect(pts).toHaveLength(1);
     expect(pts[0].date).toBe("2026-05-01");
@@ -74,7 +108,9 @@ describe("buildChartPoints & polyline", () => {
       plotLeft,
       plotW,
       plotTop,
-      plotBottom
+      plotBottom,
+      minKg,
+      maxKg
     );
     expect(pts.map((p) => p.date)).toEqual(["2026-05-01", "2026-05-07"]);
   });
@@ -86,14 +122,32 @@ describe("buildChartPoints & polyline", () => {
       plotLeft,
       plotW,
       plotTop,
-      plotBottom
+      plotBottom,
+      minKg,
+      maxKg
     );
-    expect(polylinePointsString(pts)).toMatch(/^\d+(\.\d+)?,\d+(\.\d+)? \d+(\.\d+)?,\d+(\.\d+)?$/);
+    expect(polylinePointsString(pts)).toMatch(
+      /^\d+(\.\d+)?,\d+(\.\d+)? \d+(\.\d+)?,\d+(\.\d+)?$/
+    );
   });
 });
 
-describe("CHART_MAX_KG", () => {
-  it("domínio fixo da spec", () => {
-    expect(CHART_MAX_KG).toBe(112);
+describe("yAxisTickValuesKg", () => {
+  it("união de múltiplos de 20 e 30 no intervalo", () => {
+    const ticks = yAxisTickValuesKg(0, 112);
+    expect(ticks).toContain(0);
+    expect(ticks).toContain(20);
+    expect(ticks).toContain(30);
+    expect(ticks).toContain(60);
+    expect(ticks).toContain(90);
+    expect(ticks).toContain(100);
+    expect(ticks).toContain(112);
+    expect(ticks).toEqual([...ticks].sort((a, b) => a - b));
+  });
+
+  it("intervalo curto (p.ex. 0–90)", () => {
+    const ticks = yAxisTickValuesKg(0, 90);
+    expect(ticks[0]).toBe(0);
+    expect(ticks.at(-1)).toBe(90);
   });
 });
