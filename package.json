@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev:kill": "bash scripts/kill-dev-ports.sh",
+    "dev:kill:hard": "bash scripts/kill-dev-ports-hard.sh",
+    "dev:only": "next dev --webpack -p 3750",
+    "dev": "bash scripts/kill-dev-ports.sh && next dev --webpack -p 3750",
     "build": "next build --webpack",
     "vercel-build": "next build --webpack",
     "start": "next start",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed:dev": "node --env-file=.env.local scripts/seed-dev-user.cjs",
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { weights } from "@/db/schema";
-import { and, eq, like, desc, lt } from "drizzle-orm";
+import { and, eq, like, desc, lt, gte, lte } from "drizzle-orm";
 
 export async function getWeightWithPrevious(
   userId: string,
@@ -32,6 +32,26 @@ export async function getWeightsForMonth(
     .select({ date: weights.date, weight: weights.weight })
     .from(weights)
     .where(and(eq(weights.userId, userId), like(weights.date, `${month}%`)));
+
+  return Object.fromEntries(rows.map((r) => [r.date, r.weight]));
+}
+
+/** Intervalo inclusivo; datas no formato YYYY-MM-DD (ordem lexicográfica = cronológica). */
+export async function getWeightsBetweenDates(
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<Record<string, number>> {
+  const rows = await db
+    .select({ date: weights.date, weight: weights.weight })
+    .from(weights)
+    .where(
+      and(
+        eq(weights.userId, userId),
+        gte(weights.date, startDate),
+        lte(weights.date, endDate)
+      )
+    );
 
   return Object.fromEntries(rows.map((r) => [r.date, r.weight]));
 }

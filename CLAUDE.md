@@ -11,6 +11,10 @@ Toda implementação de feature, correção de bug ou mudança de comportamento 
   - US novos criados para fluxos que ainda não existiam
   - Versão e data do documento incrementadas
 - [ ] **Comportamentos edge case documentados** na seção "Regras de negócio" (ex: o que acontece em caso de falha, limites, timezone, estado vazio)
+- [ ] **Docs de projeto atualizados** (em `../.specs/project/` e `../.specs/features/`):
+  - `STATE.md`: atualizar "Last Updated", "Current Work" e marcar milestone como concluído se aplicável
+  - `tasks.md`: marcar tarefas concluídas com ✅ e adicionar notas sobre o que foi implementado fora do plano
+  - `ROADMAP.md`: atualizar status de features de PLANNED → IN PROGRESS → DONE quando concluídas
 - [ ] **Deploy**: commit + push para `main` e `vercel --prod` a partir de `app/`
 
 ## Migrações de banco de dados em produção
