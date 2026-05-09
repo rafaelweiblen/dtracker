@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { ChevronDown, ChevronLeft, WifiOff, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createEntry } from "@/app/actions/entries";
@@ -23,8 +23,8 @@ function formatDateLabel(date: string): string {
 }
 
 const PLACEHOLDER: Record<EntryType, string> = {
-  escape: "O que você comeu?",
-  exercise: "Qual exercício você fez?",
+  escape: "O que você comeu…",
+  exercise: "Qual exercício você fez…",
 };
 
 interface EntryFormProps {
@@ -49,6 +49,9 @@ export function EntryForm({
   const [isPending, startTransition] = useTransition();
   const [selectedDate, setSelectedDate] = useState(initialDate ?? localDateISO());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const descriptionFieldId = useId();
+  const descriptionErrorId = useId();
+  const datePickerPanelId = useId();
   const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
   const trimmed = description.trim();
@@ -109,16 +112,16 @@ export function EntryForm({
               type="button"
               onClick={onBack}
               aria-label="Voltar"
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground"
+              className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <ChevronLeft size={20} />
             </button>
           )}
           <p className="font-medium">
             {type === "escape" ? (
-              <><UtensilsCrossed size={16} className="inline-block text-red-600" /> Escapei da dieta</>
+              <><UtensilsCrossed size={16} className="inline-block text-destructive" aria-hidden /> Escapei da dieta</>
             ) : (
-              <><Dumbbell size={16} className="inline-block text-green-600" /> Fiz exercício</>
+              <><Dumbbell size={16} className="inline-block text-primary" aria-hidden /> Fiz exercício</>
             )}
           </p>
           {!isOnline && (
@@ -131,18 +134,27 @@ export function EntryForm({
         <button
           type="button"
           onClick={() => setDatePickerOpen(true)}
-          className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          aria-expanded={datePickerOpen}
+          aria-haspopup="dialog"
+          aria-controls={datePickerPanelId}
+          className="flex w-fit items-center gap-1 rounded-lg text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           {formatDateLabel(selectedDate)}
-          <ChevronDown size={14} />
+          <ChevronDown size={14} aria-hidden />
         </button>
 
         <div className="flex flex-col gap-1">
+          <label htmlFor={descriptionFieldId} className="sr-only">
+            Descrição do registro
+          </label>
           <textarea
+            id={descriptionFieldId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={PLACEHOLDER[type]}
             rows={4}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? descriptionErrorId : undefined}
             className={cn(
               "w-full resize-none rounded-xl border bg-transparent p-3 text-sm outline-none transition-colors",
               "placeholder:text-muted-foreground",
@@ -152,7 +164,9 @@ export function EntryForm({
           />
           <div className="flex items-center justify-between">
             {error ? (
-              <p className="text-xs text-destructive">{error}</p>
+              <p id={descriptionErrorId} role="alert" className="text-xs text-destructive">
+                {error}
+              </p>
             ) : (
               <span />
             )}
@@ -172,6 +186,7 @@ export function EntryForm({
         onClose={() => setDatePickerOpen(false)}
         selected={selectedDate}
         onSelect={setSelectedDate}
+        panelId={datePickerPanelId}
       />
     </>
   );

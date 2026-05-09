@@ -7,6 +7,7 @@ import { EntrySection } from "./entry-section";
 import { EditBottomSheet } from "./edit-bottom-sheet";
 import { LogFAB } from "./log-fab";
 import { useSyncQueue } from "@/hooks/use-sync-queue";
+import { Plus } from "lucide-react";
 
 interface DailyLogProps {
   initialEntries: Entry[];
@@ -36,12 +37,14 @@ export function DailyLog({ initialEntries, date, readOnly = false, currentWeight
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="relative flex flex-col gap-8 pb-24">
       {isEmpty ? (
-        <div className="py-12 text-center">
-          <p className="text-base font-medium">Nenhum registro ainda</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Toque no + para registrar uma escapada ou exercício
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/[0.06] px-5 py-10">
+          <p className="font-display text-lg font-medium tracking-tight text-foreground">
+            Comece pelo primeiro registro
+          </p>
+          <p className="mt-2 max-w-[17rem] text-sm leading-relaxed text-muted-foreground">
+            Use o botão <Plus className="mx-0.5 inline size-3.5 align-text-bottom text-primary" aria-hidden /> no canto inferior direito para registrar uma escapada ou um exercício. Os registros aparecem aqui por dia.
           </p>
         </div>
       ) : (

@@ -41,9 +41,9 @@ export default async function DayDetailPage({
         <Link
           href="/calendar"
           aria-label="Voltar ao calendário"
-          className="rounded-lg p-1 text-muted-foreground hover:text-foreground"
+          className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} aria-hidden />
         </Link>
         <h1 className="text-xl font-semibold capitalize">{formatDate(date)}</h1>
       </div>

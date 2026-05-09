@@ -48,34 +48,37 @@ export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl border"
+      className="relative overflow-hidden rounded-xl border border-border/90 shadow-sm shadow-black/[0.02]"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onMouseEnter={() => setHoverVisible(true)}
       onMouseLeave={() => setHoverVisible(false)}
     >
-      {/* action buttons revealed by swipe */}
       <div className="absolute inset-y-0 right-0 flex">
         <button
-          onClick={() => { setActionsVisible(false); onEdit(entry); }}
-          className="flex w-16 items-center justify-center bg-muted text-foreground"
+          type="button"
+          onClick={() => {
+            setActionsVisible(false);
+            onEdit(entry);
+          }}
+          className="flex w-16 items-center justify-center bg-muted text-foreground focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Editar"
         >
-          <Pencil size={18} />
+          <Pencil size={18} aria-hidden />
         </button>
         <button
+          type="button"
           onClick={handleDelete}
-          className="flex w-16 items-center justify-center bg-destructive/15 text-destructive"
+          className="flex w-16 items-center justify-center bg-destructive/15 text-destructive focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Excluir"
         >
-          <Trash2 size={18} />
+          <Trash2 size={18} aria-hidden />
         </button>
       </div>
 
-      {/* card content */}
       <div
         className={cn(
-          "relative flex items-start gap-3 bg-background p-4 transition-transform",
+          "relative flex items-start gap-3 bg-card p-4 transition-transform",
           (actionsVisible || hoverVisible) && "-translate-x-32"
         )}
         onClick={() => actionsVisible && setActionsVisible(false)}
@@ -83,19 +86,19 @@ export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
         <div className="flex flex-1 flex-col gap-1 overflow-hidden">
           <span
             className={cn(
-              "self-start rounded-full px-2 py-0.5 text-xs font-medium",
+              "self-start rounded-full border px-2 py-0.5 text-xs font-medium",
               entry.type === "escape"
-                ? "bg-red-100 text-red-700"
-                : "bg-green-100 text-green-700"
+                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                : "border-primary/25 bg-primary/10 text-primary"
             )}
           >
             {entry.type === "escape" ? "Escapada" : "Exercício"}
           </span>
-          <p className="break-words text-sm">{entry.description}</p>
+          <p className="break-words text-sm leading-snug">{entry.description}</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{formatDateTime(entry.createdAt)}</span>
             {entry.edited && <span>· editado</span>}
-            {entry.pendingSync && <span>· ⏳</span>}
+            {entry.pendingSync && <span aria-hidden>· ⏳</span>}
           </div>
         </div>
       </div>

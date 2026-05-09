@@ -26,9 +26,17 @@ interface DatePickerSheetProps {
   onClose: () => void;
   selected: string;
   onSelect: (date: string) => void;
+  /** Ligado a `aria-controls` no botão que abre o calendário. */
+  panelId?: string;
 }
 
-export function DatePickerSheet({ open, onClose, selected, onSelect }: DatePickerSheetProps) {
+export function DatePickerSheet({
+  open,
+  onClose,
+  selected,
+  onSelect,
+  panelId,
+}: DatePickerSheetProps) {
   const today = localDateISO();
 
   const [viewYear, setViewYear] = useState(() => parseInt(selected.slice(0, 4)));
@@ -93,8 +101,8 @@ export function DatePickerSheet({ open, onClose, selected, onSelect }: DatePicke
         className={cn(
           "flex items-center justify-center size-9 rounded-lg text-sm transition-colors",
           isFuture && "opacity-30 cursor-not-allowed",
-          isSelected && "bg-green-600 text-white font-semibold",
-          !isSelected && isToday && "ring-2 ring-green-600 font-semibold",
+          isSelected && "bg-primary font-semibold text-primary-foreground",
+          !isSelected && isToday && "font-semibold ring-2 ring-primary",
           !isSelected && !isFuture && "hover:bg-muted active:bg-muted"
         )}
       >
@@ -104,14 +112,14 @@ export function DatePickerSheet({ open, onClose, selected, onSelect }: DatePicke
   }
 
   const sheet = (
-    <BottomSheet open={open} onClose={onClose}>
+    <BottomSheet open={open} onClose={onClose} panelId={panelId}>
       <div className="flex flex-col gap-3 pb-2">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={prevMonth}
             aria-label="Mês anterior"
-            className="rounded-lg p-1 text-muted-foreground hover:text-foreground"
+            className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <ChevronLeft size={20} />
           </button>
@@ -124,7 +132,7 @@ export function DatePickerSheet({ open, onClose, selected, onSelect }: DatePicke
             disabled={!canGoToNextMonth}
             aria-label="Próximo mês"
             className={cn(
-              "rounded-lg p-1 text-muted-foreground hover:text-foreground",
+              "rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40",
               !canGoToNextMonth && "opacity-30 cursor-not-allowed"
             )}
           >

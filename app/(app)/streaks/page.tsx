@@ -25,8 +25,8 @@ function RankingItem({ run, position }: { run: StreakRun; position: number }) {
         </span>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-2xl font-bold leading-none text-green-600">{run.length}</span>
-        <Dumbbell size={18} className="text-green-600" />
+        <span className="text-2xl font-bold leading-none text-primary">{run.length}</span>
+        <Dumbbell size={18} className="text-primary" aria-hidden />
       </div>
     </div>
   );
@@ -52,14 +52,18 @@ export default async function StreaksPage({
   return (
     <div className="flex flex-col gap-4 px-4 py-6 pb-20">
       <div className="flex items-center gap-3">
-        <Link href="/home" className="text-muted-foreground">
-          <ArrowLeft size={20} />
+        <Link
+          href="/home"
+          aria-label="Voltar ao início"
+          className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          <ArrowLeft size={20} aria-hidden />
         </Link>
         <h1 className="text-2xl font-bold">Ranking de Sequências</h1>
       </div>
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Trophy size={16} className="text-green-600" />
+        <Trophy size={16} className="text-primary" aria-hidden />
         <span>Top 3 maiores sequências de exercício</span>
       </div>
 

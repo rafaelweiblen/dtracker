@@ -26,7 +26,7 @@ function RankingItem({ run, position }: { run: StreakRun; position: number }) {
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-2xl font-bold leading-none">{run.length}</span>
-        <UtensilsCrossed size={18} className="text-red-500" />
+        <UtensilsCrossed size={18} className="text-destructive" aria-hidden />
       </div>
     </div>
   );
@@ -52,14 +52,18 @@ export default async function EscapeRankingPage({
   return (
     <div className="flex flex-col gap-4 px-4 py-6 pb-20">
       <div className="flex items-center gap-3">
-        <Link href="/home" className="text-muted-foreground">
-          <ArrowLeft size={20} />
+        <Link
+          href="/home"
+          aria-label="Voltar ao início"
+          className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          <ArrowLeft size={20} aria-hidden />
         </Link>
         <h1 className="text-2xl font-bold">Ranking Sem Escapadas</h1>
       </div>
 
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Trophy size={16} className="text-red-500" />
+        <Trophy size={16} className="text-destructive" aria-hidden />
         <span>Top 3 maiores sequências sem escapada</span>
       </div>
 

@@ -15,16 +15,21 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
   const diff = hasToday && previousWeight != null ? weight - previousWeight : null;
 
   return (
-    <div className="flex flex-col gap-0.5 rounded-xl border p-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-1 rounded-2xl border border-border/90 bg-card px-3.5 py-3 shadow-sm shadow-black/[0.03]">
+      <div className="flex items-center justify-between gap-2">
         <Link
           href="/weight"
-          className="flex flex-1 items-center gap-1.5 active:opacity-70"
+          className="flex min-w-0 flex-1 items-center gap-2 active:opacity-75"
         >
-          <Scale size={18} className="text-blue-500" />
+          <Scale size={18} className="shrink-0 text-primary" aria-hidden />
           {displayWeight != null ? (
             <>
-              <span className={cn("text-2xl font-bold leading-none", isStale && "text-muted-foreground")}>
+              <span
+                className={cn(
+                  "text-metric tabular-nums text-foreground",
+                  isStale && "text-muted-foreground"
+                )}
+              >
                 {displayWeight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
               </span>
               <span className="text-sm text-muted-foreground">kg</span>
@@ -33,15 +38,15 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
             <span className="text-sm text-muted-foreground">—</span>
           )}
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {diff != null && Math.abs(diff) >= 0.05 && (
             <div
               className={cn(
-                "flex items-center gap-1 text-xs font-medium",
-                diff > 0 ? "text-red-500" : "text-green-600"
+                "flex items-center gap-1 text-xs font-semibold tabular-nums",
+                diff > 0 ? "text-destructive" : "text-primary"
               )}
             >
-              {diff > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+              {diff > 0 ? <TrendingUp size={15} aria-hidden /> : <TrendingDown size={15} aria-hidden />}
               <span>
                 {diff > 0 ? "+" : ""}
                 {diff.toFixed(1)} kg
@@ -50,22 +55,23 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
           )}
           {(hasToday || isStale) && onEdit && (
             <button
+              type="button"
               onClick={onEdit}
               aria-label="Editar peso"
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground active:opacity-70"
+              className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:opacity-75"
             >
-              <Pencil size={16} />
+              <Pencil size={16} aria-hidden />
             </button>
           )}
         </div>
       </div>
-      <Link href="/weight" className="active:opacity-70">
+      <Link href="/weight" className="active:opacity-75">
         <span className="text-xs text-muted-foreground">
           {hasToday
             ? "peso de hoje"
             : isStale
-            ? "último peso registrado"
-            : "Toque em + para registrar seu peso"}
+              ? "último peso registrado"
+              : "Toque em + para registrar seu peso"}
         </span>
       </Link>
     </div>

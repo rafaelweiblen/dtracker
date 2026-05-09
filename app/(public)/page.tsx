@@ -3,33 +3,85 @@ import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-8 p-8">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div
-          className="flex size-16 items-center justify-center rounded-2xl bg-primary text-3xl"
-          aria-hidden={true}
-        >
-          🥗
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="flex min-h-svh flex-col justify-end px-6 pb-12 pt-8 outline-none sm:justify-center sm:pb-16"
+    >
+      <div className="landing-reveal mb-10 flex items-start gap-4">
+        <BrandMark className="mt-1 shrink-0 text-primary" aria-hidden />
+        <div className="min-w-0 text-left">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/90">
+            Hábitos, sem julgamento
+          </p>
+          <h1 className="text-display-xl mt-2 text-foreground">
+            Diet
+            <br />
+            Tracker
+          </h1>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">Diet Tracker</h1>
-        <p className="max-w-xs text-muted-foreground">
-          Registre suas escapadas da dieta e exercícios. Veja seu progresso dia
-          a dia.
+      </div>
+
+      <div className="landing-reveal landing-reveal-delay-1 max-w-[22rem] text-left">
+        <p className="text-pretty text-base leading-relaxed text-muted-foreground">
+          Registre escapadas e exercícios, veja o ritmo dia a dia e mantenha
+          consistência com leveza.
         </p>
       </div>
 
-      <form
-        action={async () => {
-          "use server";
-          await signIn("google", { redirectTo: "/home" });
-        }}
-      >
-        <Button type="submit" size="lg" className="gap-3 px-6">
-          <GoogleIcon />
-          Entrar com Google
-        </Button>
-      </form>
+      <div className="landing-reveal landing-reveal-delay-2 mt-10">
+        <form
+          action={async () => {
+            "use server";
+            await signIn("google", { redirectTo: "/home" });
+          }}
+        >
+          <Button
+            type="submit"
+            size="lg"
+            className="h-12 w-full max-w-[22rem] gap-3 px-6 text-base shadow-md shadow-primary/15"
+          >
+            <GoogleIcon />
+            Entrar com Google
+          </Button>
+        </form>
+      </div>
     </main>
+  );
+}
+
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="44"
+      height="52"
+      viewBox="0 0 44 52"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M22 4c-8 10-14 22-14 34 0 6 6 10 14 10s14-4 14-10c0-12-6-24-14-34z"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M22 14v18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14 26h16"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        opacity="0.55"
+      />
+    </svg>
   );
 }
 

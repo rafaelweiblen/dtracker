@@ -36,19 +36,32 @@ export default async function HomePage({
   ]);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col px-4 pb-6 pt-3">
       <DateSync serverDate={today} />
-      <h1 className="text-xl font-semibold capitalize">{formatDate(today)}</h1>
-      <StreakBar
-        exerciseStreak={streaks.exerciseStreak}
-        daysSinceEscape={streaks.daysSinceEscape}
-      />
-      <HomeClientWrapper
-        initialTodayWeight={weightData.today}
-        previousWeight={weightData.previous}
-        initialEntries={entries}
-        date={today}
-      />
+      <header className="home-section-reveal space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          Hoje
+        </p>
+        <h1 className="text-display-home capitalize text-foreground">
+          {formatDate(today)}
+        </h1>
+      </header>
+
+      <div className="home-section-reveal home-section-reveal-delay-1 mt-7">
+        <StreakBar
+          exerciseStreak={streaks.exerciseStreak}
+          daysSinceEscape={streaks.daysSinceEscape}
+        />
+      </div>
+
+      <div className="home-section-reveal home-section-reveal-delay-2 mt-10 flex flex-col gap-5">
+        <HomeClientWrapper
+          initialTodayWeight={weightData.today}
+          previousWeight={weightData.previous}
+          initialEntries={entries}
+          date={today}
+        />
+      </div>
     </div>
   );
 }

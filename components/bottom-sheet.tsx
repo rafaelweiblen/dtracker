@@ -8,6 +8,8 @@ interface BottomSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  /** Para `aria-controls` no elemento que abre o painel (ex.: date picker). */
+  panelId?: string;
 }
 
 export function BottomSheet({
@@ -15,6 +17,7 @@ export function BottomSheet({
   onClose,
   children,
   className,
+  panelId,
 }: BottomSheetProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -44,13 +47,14 @@ export function BottomSheet({
       )}
     >
       <div
+        id={panelId}
         className={cn(
-          "w-full max-w-lg rounded-t-2xl bg-background px-4 pb-safe-or-4 pt-4 shadow-xl",
+          "max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-2xl border-t border-border/60 bg-background px-4 pb-safe-or-4 pt-4 shadow-xl",
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-muted-foreground/30" />
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-primary/25" aria-hidden />
         {children}
       </div>
     </dialog>

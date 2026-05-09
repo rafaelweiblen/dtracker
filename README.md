@@ -2,7 +2,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## CI e Dependabot
 
-O workflow GitHub Actions vive na **raiz do repositório** em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (contexto `app/` via `working-directory`). O [Dependabot](../.github/dependabot.yml) agrupa atualizações **minor** e **patch**; **majors** chegam em PRs separados para revisão explícita.
+Workflow em [`.github/workflows/ci.yml`](.github/workflows/ci.yml). [Dependabot](.github/dependabot.yml): agrupa **minor** e **patch**; **majors** em PRs separados.
+
+## Direção visual
+
+[design-direction.md](design-direction.md) — tom orgânico/wellness; tipografia **Fraunces** + **Nunito**; cores via tokens (`primary` / `destructive`), neutros matizados em OKLCH.
 
 ## Getting Started
 
@@ -22,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tipografia carregada com [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) (Fraunces + Nunito).
 
 ## Learn More
 

@@ -51,7 +51,7 @@ export function EditWeightBottomSheet({
           disabled={isPending}
           className="mt-1 flex w-full items-center justify-center gap-2 py-3 text-sm font-medium text-destructive disabled:opacity-50"
         >
-          <Trash2 size={16} />
+          <Trash2 size={16} aria-hidden />
           {isPending ? "Excluindo…" : "Excluir registro"}
         </button>
       )}

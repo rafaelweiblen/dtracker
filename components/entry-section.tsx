@@ -12,13 +12,22 @@ interface EntrySectionProps {
 }
 
 const LABELS: Record<EntryType, { icon: React.ReactNode; text: string }> = {
-  escape: { icon: <UtensilsCrossed size={14} />, text: "Escapadas" },
-  exercise: { icon: <Dumbbell size={14} />, text: "Exercícios" },
+  escape: {
+    icon: <UtensilsCrossed size={14} className="text-destructive" aria-hidden />,
+    text: "Escapadas",
+  },
+  exercise: {
+    icon: <Dumbbell size={14} className="text-primary" aria-hidden />,
+    text: "Exercícios",
+  },
+};
+
+const EMPTY_COPY: Record<EntryType, string> = {
+  escape: "Nenhuma escapada registada neste dia.",
+  exercise: "Nenhum exercício registado neste dia.",
 };
 
 export function EntrySection({ type, entries, onEdit, onDelete }: EntrySectionProps) {
-  if (entries.length === 0) return null;
-
   const sorted = [...entries].sort(
     (a, b) =>
       new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
@@ -27,13 +36,25 @@ export function EntrySection({ type, entries, onEdit, onDelete }: EntrySectionPr
   const { icon, text } = LABELS[type];
 
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-        {icon}{text}
+    <section className="flex flex-col gap-2.5" aria-labelledby={`section-${type}`}>
+      <h2
+        id={`section-${type}`}
+        className="flex items-center gap-2 font-display text-sm font-semibold tracking-tight text-muted-foreground"
+      >
+        {icon}
+        {text}
       </h2>
-      {sorted.map((entry) => (
-        <EntryCard key={entry.id} entry={entry} onEdit={onEdit} onDelete={onDelete} />
-      ))}
+      {entries.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-border/70 bg-muted/40 px-4 py-5 text-center text-sm leading-relaxed text-muted-foreground">
+          {EMPTY_COPY[type]}
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {sorted.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} onEdit={onEdit} onDelete={onDelete} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

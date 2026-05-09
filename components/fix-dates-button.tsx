@@ -22,13 +22,21 @@ export function FixDatesButton() {
   return (
     <div className="flex flex-col gap-2">
       <button
+        type="button"
         onClick={handleFix}
         disabled={isPending}
-        className="rounded-xl border px-4 py-3 text-left text-sm font-medium text-muted-foreground disabled:opacity-50"
+        aria-describedby={msg ? "fix-dates-feedback" : undefined}
+        className="rounded-xl border px-4 py-3 text-left text-sm font-medium text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
       >
         {isPending ? "Corrigindo…" : "Corrigir datas de registros"}
       </button>
-      {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
+      <div aria-live="polite" aria-atomic="true" className="min-h-[1.25rem]">
+        {msg ? (
+          <p id="fix-dates-feedback" className="text-xs text-muted-foreground">
+            {msg}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

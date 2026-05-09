@@ -64,20 +64,22 @@ export function CalendarView({ initialSummary, today }: CalendarViewProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={() => navigate(prevMonth(month))}
           aria-label="Mês anterior"
-          className="rounded-lg p-2 hover:bg-muted"
+          className="rounded-lg p-2 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={18} aria-hidden />
         </button>
         <h2 className="text-base font-semibold capitalize">{title}</h2>
         <button
+          type="button"
           onClick={() => navigate(nextMonth(month))}
           disabled={isCurrentMonth}
           aria-label="Próximo mês"
-          className="rounded-lg p-2 hover:bg-muted disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-lg p-2 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-30"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={18} aria-hidden />
         </button>
       </div>
 

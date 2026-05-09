@@ -20,9 +20,10 @@ export function LogFAB({ onNewEntry, onWeightSaved, enqueue, initialDate, curren
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         aria-label="Registrar entrada"
-        className="absolute bottom-4 right-4 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+        className="absolute bottom-4 right-4 z-40 flex size-14 min-h-14 min-w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
       >
         <Plus size={24} aria-hidden />
       </button>

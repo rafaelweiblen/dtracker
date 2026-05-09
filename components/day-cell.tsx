@@ -9,6 +9,19 @@ export interface DayCellProps {
   isFuture: boolean;
 }
 
+function linkAriaLabel(date: string, hasEscape: boolean, hasExercise: boolean): string {
+  const long = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(`${date}T12:00:00`));
+  const bits: string[] = [];
+  if (hasEscape) bits.push("escapada registada");
+  if (hasExercise) bits.push("exercício registado");
+  const detail = bits.length ? `. ${bits.join("; ")}` : "";
+  return `Ver registros de ${long}${detail}`;
+}
+
 export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: DayCellProps) {
   const day = parseInt(date.slice(8), 10);
 
@@ -16,14 +29,18 @@ export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: Day
     <div
       className={cn(
         "flex flex-col items-center justify-center gap-0.5 size-8 rounded-lg text-sm",
-        isToday && "ring-2 ring-green-600 font-semibold",
+        isToday && "font-semibold ring-2 ring-primary",
         isFuture && "opacity-30"
       )}
     >
       <span>{day}</span>
       <div className="flex gap-0.5">
-        {hasEscape && <span className="size-1.5 rounded-full bg-red-500" />}
-        {hasExercise && <span className="size-1.5 rounded-full bg-green-500" />}
+        {hasEscape && (
+          <span className="size-1.5 rounded-full bg-destructive" aria-hidden />
+        )}
+        {hasExercise && (
+          <span className="size-1.5 rounded-full bg-primary" aria-hidden />
+        )}
         {!hasEscape && !hasExercise && <span className="size-1.5" />}
       </div>
     </div>
@@ -32,7 +49,11 @@ export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: Day
   if (isFuture) return <div>{inner}</div>;
 
   return (
-    <Link href={`/day/${date}`} className="block rounded-lg hover:bg-muted">
+    <Link
+      href={`/day/${date}`}
+      aria-label={linkAriaLabel(date, hasEscape, hasExercise)}
+      className="block rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
       {inner}
     </Link>
   );

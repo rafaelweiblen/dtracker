@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { BottomSheet } from "./bottom-sheet";
 import { updateEntry } from "@/app/actions/entries";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ interface EditBottomSheetProps {
 }
 
 export function EditBottomSheet({ entry, onClose }: EditBottomSheetProps) {
+  const descriptionFieldId = useId();
+  const descriptionErrorId = useId();
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -55,24 +57,30 @@ export function EditBottomSheet({ entry, onClose }: EditBottomSheetProps) {
             type="button"
             onClick={handleClose}
             aria-label="Fechar"
-            className="rounded-lg p-1 text-muted-foreground hover:text-foreground"
+            className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <ChevronLeft size={20} />
           </button>
           <p className="font-medium">
             {entry?.type === "escape" ? (
-              <><UtensilsCrossed size={16} className="inline-block text-red-600" /> Editar escapada</>
+              <><UtensilsCrossed size={16} className="inline-block text-destructive" aria-hidden /> Editar escapada</>
             ) : (
-              <><Dumbbell size={16} className="inline-block text-green-600" /> Editar exercício</>
+              <><Dumbbell size={16} className="inline-block text-primary" aria-hidden /> Editar exercício</>
             )}
           </p>
         </div>
 
         <div className="flex flex-col gap-1">
+          <label htmlFor={descriptionFieldId} className="sr-only">
+            Descrição
+          </label>
           <textarea
+            id={descriptionFieldId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? descriptionErrorId : undefined}
             className={cn(
               "w-full resize-none rounded-xl border bg-transparent p-3 text-sm outline-none transition-colors",
               "placeholder:text-muted-foreground",
@@ -81,7 +89,13 @@ export function EditBottomSheet({ entry, onClose }: EditBottomSheetProps) {
             )}
           />
           <div className="flex items-center justify-between">
-            {error ? <p className="text-xs text-destructive">{error}</p> : <span />}
+            {error ? (
+              <p id={descriptionErrorId} role="alert" className="text-xs text-destructive">
+                {error}
+              </p>
+            ) : (
+              <span />
+            )}
             <span className={cn("text-xs text-muted-foreground", count > MAX && "text-destructive")}>
               {count}/{MAX}
             </span>

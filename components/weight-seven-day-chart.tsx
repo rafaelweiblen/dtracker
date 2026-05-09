@@ -117,6 +117,17 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
     setSelectedWeight(null);
   }
 
+  function handlePointKeyDown(
+    e: React.KeyboardEvent<SVGGElement>,
+    date: string,
+    weight: number | undefined
+  ) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openDay(date, weight);
+    }
+  }
+
   function labelForColumn(date: string) {
     const [yy, mm, dd] = date.split("-").map(Number);
     const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(
@@ -219,8 +230,8 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
                     y={X_AXIS_DAY_NUM_Y}
                     textAnchor="middle"
                     className={cn(
-                      "fill-foreground tabular-nums font-semibold",
-                      isTodayMark ? "text-[12px] text-blue-600" : "text-[11px]"
+                      "tabular-nums font-semibold",
+                      isTodayMark ? "fill-primary text-[12px]" : "fill-foreground text-[11px]"
                     )}
                   >
                     {dayNum}
@@ -230,8 +241,10 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
                     y={X_AXIS_WEEKDAY_Y}
                     textAnchor="middle"
                     className={cn(
-                      "fill-muted-foreground text-[9px] capitalize leading-none",
-                      isTodayMark && "font-semibold text-blue-600"
+                      "text-[9px] capitalize leading-none",
+                      isTodayMark
+                        ? "fill-primary font-semibold"
+                        : "fill-muted-foreground"
                     )}
                   >
                     {weekday}
@@ -247,14 +260,14 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
                 textAnchor="middle"
                 className="fill-muted-foreground text-[11px]"
               >
-                Toque num ponto para registar peso
+                Toque ou foque um ponto para registar peso
               </text>
             ) : null}
 
             {linePts ? (
               <polyline
                 fill="none"
-                className="stroke-blue-500"
+                className="stroke-primary"
                 strokeWidth={2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -267,8 +280,10 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
               return (
               <g
                 key={p.date}
+                tabIndex={0}
                 onClick={() => openDay(p.date, p.weight)}
-                className="cursor-pointer"
+                onKeyDown={(e) => handlePointKeyDown(e, p.date, p.weight)}
+                className="cursor-pointer outline-none focus-visible:[&_circle]:stroke-ring focus-visible:[&_circle]:stroke-[3]"
                 role="button"
                 aria-label={`Editar peso de ${p.date}`}
               >
@@ -276,14 +291,14 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
                   cx={p.x}
                   cy={p.y}
                   r={6}
-                  className="fill-blue-600 stroke-background"
+                  className="fill-primary stroke-background"
                   strokeWidth={2}
                 />
                 <text
                   x={p.x}
                   y={labelTooHigh ? p.y + 16 : p.y - 10}
                   textAnchor="middle"
-                  className="fill-blue-900 text-[11px] font-semibold tabular-nums"
+                  className="fill-primary text-[11px] font-semibold tabular-nums"
                 >
                   {p.weight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}
                 </text>

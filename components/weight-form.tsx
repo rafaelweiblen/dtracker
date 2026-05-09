@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { ChevronLeft, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { upsertWeight } from "@/app/actions/weight";
@@ -14,6 +14,8 @@ interface WeightFormProps {
 }
 
 export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFormProps) {
+  const weightInputId = useId();
+  const weightErrorId = useId();
   const [value, setValue] = useState(
     initialWeight != null ? String(initialWeight).replace(".", ",") : ""
   );
@@ -48,27 +50,31 @@ export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFor
             type="button"
             onClick={onBack}
             aria-label="Voltar"
-            className="rounded-lg p-1 text-muted-foreground hover:text-foreground"
+            className="rounded-lg p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <ChevronLeft size={20} />
           </button>
         )}
         <p className="font-medium">
-          <Scale size={16} className="inline-block text-blue-500 mr-1" />
+          <Scale size={16} className="mr-1 inline-block text-primary" aria-hidden />
           Peso do dia
         </p>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Peso em kg</label>
+        <label htmlFor={weightInputId} className="text-sm font-medium">
+          Peso em kg
+        </label>
         <div className="relative">
           <input
+            id={weightInputId}
             type="text"
             inputMode="decimal"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="75,5"
-            autoFocus
+            placeholder="75,5…"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? weightErrorId : undefined}
             className={cn(
               "w-full rounded-xl border bg-transparent px-3 py-3 pr-10 text-sm outline-none transition-colors",
               "placeholder:text-muted-foreground",
@@ -80,7 +86,11 @@ export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFor
             kg
           </span>
         </div>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && (
+          <p id={weightErrorId} role="alert" className="text-xs text-destructive">
+            {error}
+          </p>
+        )}
       </div>
 
       <Button type="submit" disabled={!isValid || isPending}>
