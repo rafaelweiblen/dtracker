@@ -12,9 +12,13 @@ import {
   Y_AXIS_PADDING_KG,
   parseWeightKg,
   formatYAxisKgLabel,
+  addDaysIso,
 } from "@/lib/weight-seven-day-chart";
+import {
+  computeWeightTrendBundle,
+  shouldBreakSmaSegment,
+} from "@/lib/weight-trend";
 import { EditWeightBottomSheet } from "./edit-weight-bottom-sheet";
-import { isFutureDate } from "@/lib/weight-state";
 
 /** Largura lógica ampla: o SVG escala com `w-full` dentro da página (max-w-sm). */
 const VB_W = 400;
@@ -35,6 +39,48 @@ const X_AXIS_WEEKDAY_Y = 139;
 interface WeightSevenDayChartProps {
   initialWeights: Record<string, number>;
   today: string;
+  goalTargetKg?: number | null;
+}
+
+function buildSmaSegments(
+  dates: string[],
+  smaByDate: Record<string, number | null>,
+  weights: Record<string, number>,
+  plotLeft: number,
+  plotWidth: number,
+  plotTop: number,
+  plotBottom: number,
+  minKg: number,
+  maxKg: number
+): { x: number; y: number }[][] {
+  const segments: { x: number; y: number }[][] = [];
+  let current: { date: string; x: number; y: number }[] = [];
+
+  for (let i = 0; i < dates.length; i++) {
+    const date = dates[i]!;
+    const sma = smaByDate[date];
+    if (sma == null) continue;
+    const point = {
+      date,
+      x: plotLeft + (i / 6) * plotWidth,
+      y: weightToSvgY(sma, plotTop, plotBottom, minKg, maxKg),
+    };
+    if (current.length > 0) {
+      const prev = current[current.length - 1]!;
+      if (shouldBreakSmaSegment(weights, prev.date, date)) {
+        if (current.length >= 2) segments.push(current);
+        current = [point];
+        continue;
+      }
+    }
+    current.push(point);
+  }
+  if (current.length >= 2) segments.push(current);
+  return segments;
+}
+
+function plotLeftForIndex(index: number, plotLeft: number, plotWidth: number): number {
+  return plotLeft + (index / 6) * plotWidth;
 }
 
 function dayTicksX(plotLeft: number, plotWidth: number): number[] {
@@ -45,16 +91,20 @@ function dayTicksX(plotLeft: number, plotWidth: number): number[] {
   return xs;
 }
 
-export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayChartProps) {
+export function WeightSevenDayChart({
+  initialWeights,
+  today,
+  goalTargetKg = null,
+}: WeightSevenDayChartProps) {
   const dates = useMemo(() => buildSevenDayDates(today), [today]);
-  const rangeStart = dates[0];
-  const rangeEnd = dates[6];
+  const historyStart = useMemo(() => addDaysIso(today, -89), [today]);
+  const rangeEnd = dates[6]!;
 
   const [weightsByDate, setWeightsByDate] =
     useState<Record<string, number>>(initialWeights);
 
   useEffect(() => {
-    const qs = new URLSearchParams({ start: rangeStart, end: rangeEnd });
+    const qs = new URLSearchParams({ start: historyStart, end: rangeEnd });
     fetch(`/api/weight/range?${qs}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data: Record<string, unknown> | null) => {
@@ -67,18 +117,39 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
         setWeightsByDate((prev) => ({ ...prev, ...normalized }));
       })
       .catch(() => {});
-  }, [rangeStart, rangeEnd]);
+  }, [historyStart, rangeEnd]);
+
+  const trend = useMemo(
+    () =>
+      computeWeightTrendBundle({
+        today,
+        weights: weightsByDate,
+        goalTargetKg,
+      }),
+    [today, weightsByDate, goalTargetKg]
+  );
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
 
   const plotWidth = PLOT_RIGHT - PLOT_LEFT;
-  const plotHeight = PLOT_BOTTOM - PLOT_TOP;
   const dayXs = dayTicksX(PLOT_LEFT, plotWidth);
 
+  const domainWeights = useMemo(() => {
+    const merged: Record<string, number> = { ...weightsByDate };
+    for (const d of dates) {
+      const sma = trend.smaByDate[d];
+      if (sma != null) merged[`sma:${d}`] = sma;
+    }
+    for (const p of trend.projectionPoints) {
+      if (dates.includes(p.date)) merged[`proj:${p.date}`] = p.weight;
+    }
+    return merged;
+  }, [weightsByDate, dates, trend]);
+
   const { minKg: yMinKg, maxKg: yMaxKg } = useMemo(
-    () => computeChartYDomain(dates, weightsByDate),
-    [dates, weightsByDate]
+    () => computeChartYDomain(dates, domainWeights),
+    [dates, domainWeights]
   );
 
   const points = buildChartPoints(
@@ -94,14 +165,60 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
 
   const linePts = points.length >= 2 ? polylinePointsString(points) : null;
 
+  const smaSegments = buildSmaSegments(
+    dates,
+    trend.smaByDate,
+    weightsByDate,
+    PLOT_LEFT,
+    plotWidth,
+    PLOT_TOP,
+    PLOT_BOTTOM,
+    yMinKg,
+    yMaxKg
+  );
+
+  const projectionPts = useMemo(() => {
+    const visible = new Set(dates);
+    const pts: { x: number; y: number }[] = [];
+    const anchorSma = trend.smaByDate[trend.anchor];
+    if (visible.has(trend.anchor) && anchorSma != null) {
+      const i = dates.indexOf(trend.anchor);
+      if (i >= 0) {
+        pts.push({
+          x: plotLeftForIndex(i, PLOT_LEFT, plotWidth),
+          y: weightToSvgY(anchorSma, PLOT_TOP, PLOT_BOTTOM, yMinKg, yMaxKg),
+        });
+      }
+    }
+    for (const p of trend.projectionPoints) {
+      if (!visible.has(p.date)) continue;
+      const i = dates.indexOf(p.date);
+      if (i < 0) continue;
+      pts.push({
+        x: plotLeftForIndex(i, PLOT_LEFT, plotWidth),
+        y: weightToSvgY(p.weight, PLOT_TOP, PLOT_BOTTOM, yMinKg, yMaxKg),
+      });
+    }
+    return pts.length >= 2 ? pts : null;
+  }, [dates, trend, yMinKg, yMaxKg, plotWidth]);
+
   const hasAnyWeight = dates.some((d) => weightsByDate[d] != null && weightsByDate[d]! > 0);
+  const showProjection =
+    trend.eligibleForProjection && !trend.gapPaused && projectionPts != null;
 
   const yTicks = yAxisTickValuesKg(yMinKg, yMaxKg);
 
   function ariaSummary(): string {
     const parts = dates.map((d) => {
       const w = weightsByDate[d];
-      if (w != null && w > 0) return `${d}: ${w} quilogramas`;
+      const sma = trend.smaByDate[d];
+      if (w != null && w > 0) {
+        const smaPart =
+          sma != null
+            ? `, média móvel ${sma.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg`
+            : "";
+        return `${d}: ${w} quilogramas${smaPart}`;
+      }
       return `${d}: sem registo`;
     });
     return `Gráfico de peso dos últimos sete dias. ${parts.join(". ")}.`;
@@ -138,7 +255,7 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
   }
 
   function xAxisLegendSr(): string {
-    return `Eixo vertical com margem de ${Y_AXIS_PADDING_KG} quilos para cima e para baixo da média dos últimos 7 dias. Linhas verticais tracejadas representam os dias.`;
+    return `Eixo vertical com margem de ${Y_AXIS_PADDING_KG} quilos para cima e para baixo da média dos últimos 7 dias. Linha contínua: peso registado. Linha tracejada: média móvel de 7 dias.`;
   }
 
   return (
@@ -155,7 +272,7 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
             preserveAspectRatio="xMidYMid meet"
             className="h-auto w-full max-h-[280px] min-w-0 overflow-visible"
           >
-            <title>Peso nos últimos 7 dias — eixo com margem de 10kg para cima e para baixo da média.</title>
+            <title>Peso nos últimos 7 dias com média móvel de 7 dias.</title>
 
             {/* Eixo horizontal (base visual) */}
             <line
@@ -264,6 +381,31 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
               </text>
             ) : null}
 
+            {smaSegments.map((seg, idx) => (
+              <polyline
+                key={`sma-${idx}`}
+                fill="none"
+                className="stroke-muted-foreground"
+                strokeWidth={1.75}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                strokeDasharray="6 4"
+                points={seg.map((p) => `${p.x},${p.y}`).join(" ")}
+              />
+            ))}
+
+            {showProjection ? (
+              <polyline
+                fill="none"
+                className="stroke-primary/50"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                strokeDasharray="4 4"
+                points={projectionPts!.map((p) => `${p.x},${p.y}`).join(" ")}
+              />
+            ) : null}
+
             {linePts ? (
               <polyline
                 fill="none"
@@ -308,6 +450,28 @@ export function WeightSevenDayChart({ initialWeights, today }: WeightSevenDayCha
             })}
           </svg>
 
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 px-2 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-0.5 w-4 rounded bg-primary" aria-hidden />
+              Peso registado
+            </span>
+            <span className="flex items-center gap-1">
+              <span
+                className="inline-block h-0.5 w-4 rounded border-t border-dashed border-muted-foreground"
+                aria-hidden
+              />
+              Média 7 dias
+            </span>
+            {showProjection ? (
+              <span className="flex items-center gap-1">
+                <span
+                  className="inline-block h-0.5 w-4 rounded border-t border-dashed border-primary/50"
+                  aria-hidden
+                />
+                Projeção
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 

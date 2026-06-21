@@ -89,3 +89,13 @@ export type User = typeof users.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type EntryType = "escape" | "exercise";
 export type Weight = typeof weights.$inferSelect;
+
+export const weightGoals = sqliteTable("weight_goals", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  targetKg: real("target_kg").notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export type WeightGoal = typeof weightGoals.$inferSelect;

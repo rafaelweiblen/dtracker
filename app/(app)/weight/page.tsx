@@ -1,7 +1,12 @@
 import { auth } from "@/auth";
 import { getWeightsBetweenDates } from "@/db/queries/weights";
+import { getWeightGoal } from "@/db/queries/weight-goals";
 import { WeightSevenDayChart } from "@/components/weight-seven-day-chart";
-import { windowStartDate } from "@/lib/weight-seven-day-chart";
+import { WeightTrendStatusCard } from "@/components/weight-trend-status-card";
+import { WeightGoalForm } from "@/components/weight-goal-form";
+import { WeightTrendDisclaimer } from "@/components/weight-trend-disclaimer";
+import { addDaysIso } from "@/lib/weight-seven-day-chart";
+import { computeWeightTrendBundle } from "@/lib/weight-trend";
 import { DateSync } from "@/components/date-sync";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -22,8 +27,21 @@ export default async function WeightPage({
       ? dateParam
       : new Date().toISOString().slice(0, 10);
 
-  const rangeStart = windowStartDate(today);
-  const weights = await getWeightsBetweenDates(session.user.id, rangeStart, today);
+  const historyStart = addDaysIso(today, -89);
+  const [weights, goal] = await Promise.all([
+    getWeightsBetweenDates(session.user.id, historyStart, today),
+    getWeightGoal(session.user.id),
+  ]);
+
+  const goalTargetKg = goal?.targetKg ?? null;
+  const trendBundle = computeWeightTrendBundle({
+    today,
+    weights,
+    goalTargetKg,
+  });
+
+  const showDisclaimer =
+    goalTargetKg != null || trendBundle.eligibleForProjection;
 
   return (
     <div className="flex flex-col gap-4 px-4 py-6 pb-20">
@@ -39,9 +57,20 @@ export default async function WeightPage({
         <h1 className="text-2xl font-bold">Histórico de Peso</h1>
       </div>
 
+      <WeightTrendStatusCard bundle={trendBundle} goalTargetKg={goalTargetKg} />
+
       <div className="w-full min-w-0">
-        <WeightSevenDayChart key={today} initialWeights={weights} today={today} />
+        <WeightSevenDayChart
+          key={today}
+          initialWeights={weights}
+          today={today}
+          goalTargetKg={goalTargetKg}
+        />
       </div>
+
+      <WeightGoalForm initialTargetKg={goalTargetKg} />
+
+      {showDisclaimer ? <WeightTrendDisclaimer /> : null}
     </div>
   );
 }
