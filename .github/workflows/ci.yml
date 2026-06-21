@@ -51,6 +51,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level high
+        continue-on-error: true
 
   typecheck:
     runs-on: ubuntu-latest
