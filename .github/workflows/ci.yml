@@ -123,6 +123,16 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: Migrar Turso (produção)
+        run: pnpm db:migrate:prod
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      - name: Verificar schema Turso
+        run: pnpm db:check:prod
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
       - run: pnpm add -g vercel
       - name: Deploy para produção
         run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes

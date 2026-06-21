@@ -24,7 +24,37 @@
 - `TURSO_AUTH_TOKEN` — database auth token
 - Falls back to `file:./local.db` (SQLite file) when env vars not set — used in local dev
 **Validation:** Production (VERCEL=1) throws if env vars missing  
-**Migrations:** `drizzle-kit` — `pnpm db:generate` + `pnpm db:migrate`
+**Migrations:** `drizzle-kit` — ver fluxo abaixo
+
+### Migrações Drizzle (dev vs produção)
+
+| Ambiente | Comando | Base de dados |
+|----------|---------|---------------|
+| Dev local (sem `TURSO_*` no `.env.local`) | `pnpm db:migrate` | `file:./local.db` |
+| Dev local (com `TURSO_*` no `.env.local`) | `pnpm db:migrate` | Turso remota configurada |
+| **Produção (Turso da Vercel)** | `pnpm db:migrate:prod` | Turso de prod |
+
+**Gerar migração** após alterar `db/schema.ts`:
+
+```bash
+pnpm db:generate
+```
+
+**Aplicar em produção** (obrigatório antes de deploy se o schema mudou):
+
+```bash
+pnpm db:env:prod       # só traz variáveis não sensíveis
+# Copiar TURSO_DATABASE_URL e TURSO_AUTH_TOKEN da Vercel (Settings → Environment Variables)
+# para .env.production.local — o pull deixa encriptadas vazias ("")
+pnpm db:check:prod     # confirma ligação e se weight_goals existe
+pnpm db:migrate:prod   # aplica migrações pendentes na Turso de prod
+```
+
+**Alternativa rápida:** Turso dashboard → SQL → executar o ficheiro `db/migrations/0003_weight_goals.sql`.
+
+**Atenção:** `pnpm db:migrate` com `.env.local` só de auth **não** migra produção — causa erros tipo `no such table: …` em prod após deploy. A ordem correcta é: generate → test → **migrate prod** → deploy.
+
+Credenciais Turso em produção: Vercel → Project → Settings → Environment Variables (`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`).
 
 ## Deployment
 
