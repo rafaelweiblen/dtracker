@@ -6,9 +6,15 @@ interface WeightCardProps {
   weight: number | null;
   previousWeight: number | null;
   onEdit?: () => void;
+  isToday?: boolean;
 }
 
-export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) {
+export function WeightCard({
+  weight,
+  previousWeight,
+  onEdit,
+  isToday = true,
+}: WeightCardProps) {
   const hasToday = weight != null;
   const isStale = !hasToday && previousWeight != null;
   const displayWeight = hasToday ? weight : previousWeight;
@@ -68,10 +74,16 @@ export function WeightCard({ weight, previousWeight, onEdit }: WeightCardProps) 
       <Link href="/weight" className="active:opacity-75">
         <span className="text-xs text-muted-foreground">
           {hasToday
-            ? "peso de hoje"
+            ? isToday
+              ? "peso de hoje"
+              : "peso deste dia"
             : isStale
-              ? "último peso registrado"
-              : "Toque em + para registrar seu peso"}
+              ? isToday
+                ? "último peso registrado"
+                : "sem peso neste dia — último registo anterior"
+              : isToday
+                ? "Toque em + para registrar seu peso"
+                : "Toque em + para registrar o peso deste dia"}
         </span>
       </Link>
     </div>

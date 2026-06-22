@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { getEntriesForDate } from "@/db/queries/entries";
-import { DailyLog } from "@/components/daily-log";
+import { getWeightWithPrevious } from "@/db/queries/weights";
+import { HomeClientWrapper } from "@/components/home-client-wrapper";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -33,7 +34,10 @@ export default async function DayDetailPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  const entries = await getEntriesForDate(session.user.id, date);
+  const [entries, weightData] = await Promise.all([
+    getEntriesForDate(session.user.id, date),
+    getWeightWithPrevious(session.user.id, date),
+  ]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -47,7 +51,12 @@ export default async function DayDetailPage({
         </Link>
         <h1 className="text-xl font-semibold capitalize">{formatDate(date)}</h1>
       </div>
-      <DailyLog initialEntries={entries} date={date} />
+      <HomeClientWrapper
+        initialTodayWeight={weightData.today}
+        previousWeight={weightData.previous}
+        initialEntries={entries}
+        date={date}
+      />
     </div>
   );
 }

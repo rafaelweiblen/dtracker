@@ -21,6 +21,7 @@ export function HomeClientWrapper({
 }: HomeClientWrapperProps) {
   const [todayWeight, setTodayWeight] = useState(initialTodayWeight);
   const [editingWeight, setEditingWeight] = useState(false);
+  const isToday = date === new Date().toISOString().slice(0, 10);
 
   return (
     <>
@@ -28,6 +29,7 @@ export function HomeClientWrapper({
         weight={todayWeight}
         previousWeight={previousWeight}
         onEdit={() => setEditingWeight(true)}
+        isToday={isToday}
       />
       <DailyLog
         initialEntries={initialEntries}
