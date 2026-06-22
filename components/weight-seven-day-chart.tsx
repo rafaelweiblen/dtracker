@@ -397,8 +397,8 @@ export function WeightSevenDayChart({
             {showProjection ? (
               <polyline
                 fill="none"
-                className="stroke-primary/50"
-                strokeWidth={1.5}
+                className="stroke-foreground"
+                strokeWidth={1.75}
                 strokeLinejoin="round"
                 strokeLinecap="round"
                 strokeDasharray="4 4"
@@ -465,7 +465,7 @@ export function WeightSevenDayChart({
             {showProjection ? (
               <span className="flex items-center gap-1">
                 <span
-                  className="inline-block h-0.5 w-4 rounded border-t border-dashed border-primary/50"
+                  className="inline-block h-0.5 w-4 rounded border-t border-dashed border-foreground"
                   aria-hidden
                 />
                 Projeção
