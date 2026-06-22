@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeMonthSummary, computeStreaks, computeStreakHistory, computeEscapeFreeHistory } from "./entries";
+import { computeMonthSummary, computeStreaks, computeStreakHistory, computeEscapeFreeHistory, mergeWeightDatesIntoSummary } from "./entries";
 
 // helpers
 const row = (date: string, type: "escape" | "exercise" | "water") => ({ date, type });
@@ -12,8 +12,18 @@ describe("computeMonthSummary", () => {
       row("2025-04-01", "exercise"),
       row("2025-04-02", "exercise"),
     ]);
-    expect(result["2025-04-01"]).toEqual({ escapeCount: 2, exerciseCount: 1, waterCount: 0 });
-    expect(result["2025-04-02"]).toEqual({ escapeCount: 0, exerciseCount: 1, waterCount: 0 });
+    expect(result["2025-04-01"]).toEqual({
+      escapeCount: 2,
+      exerciseCount: 1,
+      waterCount: 0,
+      hasWeight: false,
+    });
+    expect(result["2025-04-02"]).toEqual({
+      escapeCount: 0,
+      exerciseCount: 1,
+      waterCount: 0,
+      hasWeight: false,
+    });
   });
 
   it("returns empty object for no rows", () => {
@@ -30,6 +40,24 @@ describe("computeMonthSummary", () => {
       escapeCount: 0,
       exerciseCount: 1,
       waterCount: 2,
+      hasWeight: false,
+    });
+  });
+
+  it("mergeWeightDatesIntoSummary marca dias com peso", () => {
+    const base = computeMonthSummary([row("2025-04-01", "exercise")]);
+    const merged = mergeWeightDatesIntoSummary(base, ["2025-04-01", "2025-04-05"]);
+    expect(merged["2025-04-01"]).toEqual({
+      escapeCount: 0,
+      exerciseCount: 1,
+      waterCount: 0,
+      hasWeight: true,
+    });
+    expect(merged["2025-04-05"]).toEqual({
+      escapeCount: 0,
+      exerciseCount: 0,
+      waterCount: 0,
+      hasWeight: true,
     });
   });
 });

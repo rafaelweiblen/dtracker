@@ -6,6 +6,7 @@ export interface DayCellProps {
   hasEscape: boolean;
   hasExercise: boolean;
   hasWater: boolean;
+  hasWeight: boolean;
   isToday: boolean;
   isFuture: boolean;
 }
@@ -14,7 +15,8 @@ function linkAriaLabel(
   date: string,
   hasEscape: boolean,
   hasExercise: boolean,
-  hasWater: boolean
+  hasWater: boolean,
+  hasWeight: boolean
 ): string {
   const long = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
@@ -25,6 +27,7 @@ function linkAriaLabel(
   if (hasEscape) bits.push("escapada registada");
   if (hasExercise) bits.push("exercício registado");
   if (hasWater) bits.push("água registada");
+  if (hasWeight) bits.push("peso registado");
   const detail = bits.length ? `. ${bits.join("; ")}` : "";
   return `Ver registros de ${long}${detail}`;
 }
@@ -34,10 +37,12 @@ export function DayCell({
   hasEscape,
   hasExercise,
   hasWater,
+  hasWeight,
   isToday,
   isFuture,
 }: DayCellProps) {
   const day = parseInt(date.slice(8), 10);
+  const hasAnyMarker = hasEscape || hasExercise || hasWater || hasWeight;
 
   const inner = (
     <div
@@ -58,7 +63,10 @@ export function DayCell({
         {hasWater && (
           <span className="size-1.5 rounded-full bg-sky-500" aria-hidden />
         )}
-        {!hasEscape && !hasExercise && !hasWater && <span className="size-1.5" />}
+        {hasWeight && (
+          <span className="size-1.5 rounded-full bg-amber-400" aria-hidden />
+        )}
+        {!hasAnyMarker && <span className="size-1.5" />}
       </div>
     </div>
   );
@@ -68,7 +76,13 @@ export function DayCell({
   return (
     <Link
       href={`/day/${date}`}
-      aria-label={linkAriaLabel(date, hasEscape, hasExercise, hasWater)}
+      aria-label={linkAriaLabel(
+        date,
+        hasEscape,
+        hasExercise,
+        hasWater,
+        hasWeight
+      )}
       className="block rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       {inner}

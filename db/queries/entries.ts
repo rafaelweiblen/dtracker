@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { entries } from "@/db/schema";
+import { entries, weights } from "@/db/schema";
 import type { Entry } from "@/db/schema";
 import { and, eq, like, desc } from "drizzle-orm";
 
@@ -19,6 +19,7 @@ export type DaySummary = {
   escapeCount: number;
   exerciseCount: number;
   waterCount: number;
+  hasWeight: boolean;
 };
 
 export type Streaks = {
@@ -40,12 +41,38 @@ export function computeMonthSummary(
   const summary: Record<string, DaySummary> = {};
   for (const row of rows) {
     if (!summary[row.date])
-      summary[row.date] = { escapeCount: 0, exerciseCount: 0, waterCount: 0 };
+      summary[row.date] = {
+        escapeCount: 0,
+        exerciseCount: 0,
+        waterCount: 0,
+        hasWeight: false,
+      };
     if (row.type === "escape") summary[row.date].escapeCount++;
     else if (row.type === "exercise") summary[row.date].exerciseCount++;
     else if (row.type === "water") summary[row.date].waterCount++;
   }
   return summary;
+}
+
+export function mergeWeightDatesIntoSummary(
+  summary: Record<string, DaySummary>,
+  weightDates: string[]
+): Record<string, DaySummary> {
+  const result = { ...summary };
+  for (const date of weightDates) {
+    const existing = result[date];
+    if (existing) {
+      result[date] = { ...existing, hasWeight: true };
+    } else {
+      result[date] = {
+        escapeCount: 0,
+        exerciseCount: 0,
+        waterCount: 0,
+        hasWeight: true,
+      };
+    }
+  }
+  return result;
 }
 
 export function computeStreaks(
@@ -204,7 +231,16 @@ export async function getMonthSummary(
     .from(entries)
     .where(and(eq(entries.userId, userId), like(entries.date, `${month}%`)));
 
-  return computeMonthSummary(rows);
+  const weightRows = await db
+    .select({ date: weights.date })
+    .from(weights)
+    .where(and(eq(weights.userId, userId), like(weights.date, `${month}%`)));
+
+  const summary = computeMonthSummary(rows);
+  return mergeWeightDatesIntoSummary(
+    summary,
+    weightRows.map((r) => r.date)
+  );
 }
 
 export async function getStreaks(userId: string, today?: string): Promise<Streaks> {

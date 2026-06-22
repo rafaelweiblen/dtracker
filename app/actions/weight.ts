@@ -53,6 +53,8 @@ export async function upsertWeight(input: {
 
   revalidatePath("/home");
   revalidatePath("/weight");
+  revalidatePath("/calendar");
+  revalidatePath(`/day/${date}`);
 }
 
 export async function deleteWeight(date: string): Promise<void> {
@@ -64,4 +66,6 @@ export async function deleteWeight(date: string): Promise<void> {
 
   revalidatePath("/home");
   revalidatePath("/weight");
+  revalidatePath("/calendar");
+  revalidatePath(`/day/${date}`);
 }
