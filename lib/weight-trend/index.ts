@@ -16,6 +16,7 @@ import {
   sma7AtDay,
   weeklyDeltaKg,
 } from "./sma7";
+import { describeInsufficientTrend } from "./trend-readiness";
 import type { TrendState, WeightTrendBundle } from "./types";
 
 export interface ComputeWeightTrendOptions {
@@ -92,6 +93,11 @@ export function computeWeightTrendBundle(
     }
   }
 
+  const insufficientReason =
+    trendState === "insufficient"
+      ? describeInsufficientTrend(weights, anchor)
+      : null;
+
   return {
     anchor,
     trendState,
@@ -104,6 +110,7 @@ export function computeWeightTrendBundle(
     goalEstimate,
     goalIncompatible,
     plateauWarning,
+    insufficientReason,
   };
 }
 

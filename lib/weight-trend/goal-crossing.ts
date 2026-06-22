@@ -1,4 +1,5 @@
 import { addDaysIso } from "@/lib/weight-seven-day-chart";
+import { rateAtProjectedDay } from "./projection";
 import type { GoalEstimate, ProjectionPoint } from "./types";
 
 export function isGoalIncompatible(
@@ -58,7 +59,8 @@ export function findGoalCrossingCentralDate(
 
 export function buildGoalEstimate(
   centralDate: string,
-  horizonDays: number
+  horizonDays: number,
+  beyondHorizon = false
 ): GoalEstimate {
   const w = hybridWindowDays(horizonDays);
   return {
@@ -66,7 +68,68 @@ export function buildGoalEstimate(
     intervalStart: addDaysIso(centralDate, -w),
     intervalEnd: addDaysIso(centralDate, w),
     windowDays: w,
+    beyondHorizon: beyondHorizon || undefined,
   };
+}
+
+function interpolateCrossingDate(
+  prevDate: string,
+  prevWeight: number,
+  nextDate: string,
+  nextWeight: number,
+  targetKg: number
+): string {
+  const t = (targetKg - prevWeight) / (nextWeight - prevWeight);
+  const [y0, m0, d0] = prevDate.split("-").map(Number);
+  const [y1, m1, d1] = nextDate.split("-").map(Number);
+  const day0 = Date.UTC(y0, m0 - 1, d0);
+  const day1 = Date.UTC(y1, m1 - 1, d1);
+  const centralMs = day0 + t * (day1 - day0);
+  const dt = new Date(centralMs);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
+}
+
+/** Continua a projeção com decay além de horizonDays até cruzar a meta. */
+export function extrapolateGoalCrossingBeyondHorizon(input: {
+  targetKg: number;
+  anchor: string;
+  anchorSma: number;
+  deltaWeekKg: number;
+  horizonDays: number;
+  projection: ProjectionPoint[];
+}): string | null {
+  const { targetKg, anchor, anchorSma, deltaWeekKg, horizonDays, projection } =
+    input;
+  const initialRateKgPerDay = deltaWeekKg / 7;
+  if (initialRateKgPerDay === 0) return null;
+
+  let prevDate = projection.length > 0 ? projection[projection.length - 1]!.date : anchor;
+  let prevWeight =
+    projection.length > 0 ? projection[projection.length - 1]!.weight : anchorSma;
+  let k = projection.length > 0 ? projection.length : 0;
+
+  const maxExtraDays = 730;
+  for (let extra = 1; extra <= maxExtraDays; extra++) {
+    k += 1;
+    const rate = rateAtProjectedDay(initialRateKgPerDay, k);
+    const nextWeight = prevWeight + rate;
+    const nextDate = addDaysIso(prevDate, 1);
+    const crosses =
+      (prevWeight - targetKg) * (nextWeight - targetKg) <= 0 && prevWeight !== nextWeight;
+    if (crosses) {
+      return interpolateCrossingDate(
+        prevDate,
+        prevWeight,
+        nextDate,
+        nextWeight,
+        targetKg
+      );
+    }
+    prevDate = nextDate;
+    prevWeight = nextWeight;
+  }
+
+  return null;
 }
 
 export function computeGoalEstimate(input: {
@@ -90,10 +153,27 @@ export function computeGoalEstimate(input: {
     anchor,
     anchorSma
   );
-  if (!central) return { estimate: null, incompatible: false };
+  if (central) {
+    return {
+      estimate: buildGoalEstimate(central, horizonDays),
+      incompatible: false,
+    };
+  }
 
-  return {
-    estimate: buildGoalEstimate(central, horizonDays),
-    incompatible: false,
-  };
+  const extrapolated = extrapolateGoalCrossingBeyondHorizon({
+    targetKg,
+    anchor,
+    anchorSma,
+    deltaWeekKg,
+    horizonDays,
+    projection,
+  });
+  if (extrapolated) {
+    return {
+      estimate: buildGoalEstimate(extrapolated, horizonDays, true),
+      incompatible: false,
+    };
+  }
+
+  return { estimate: null, incompatible: false };
 }

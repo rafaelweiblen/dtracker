@@ -41,7 +41,9 @@ export default async function WeightPage({
   });
 
   const showDisclaimer =
-    goalTargetKg != null || trendBundle.eligibleForProjection;
+    goalTargetKg != null ||
+    trendBundle.eligibleForProjection ||
+    trendBundle.goalEstimate != null;
 
   return (
     <div className="flex flex-col gap-4 px-4 py-6 pb-20">

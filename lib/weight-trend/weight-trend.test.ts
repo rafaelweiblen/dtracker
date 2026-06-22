@@ -12,7 +12,12 @@ import {
   isGoalIncompatible,
   buildGoalEstimate,
   computeGoalEstimate,
+  extrapolateGoalCrossingBeyondHorizon,
 } from "./goal-crossing";
+import {
+  consecutiveDaysEndingAt,
+  describeInsufficientTrend,
+} from "./trend-readiness";
 import { computeWeightTrendBundle } from "./index";
 
 function fillDailyWeights(start: string, count: number, baseKg: number): Record<string, number> {
@@ -126,6 +131,65 @@ describe("goal-crossing", () => {
     });
     expect(incompatible).toBe(false);
     expect(estimate).not.toBeNull();
+  });
+
+  it("extrapola meta além do horizonte do modelo", () => {
+    const projection = buildProjectionPoints({
+      anchor: "2026-05-01",
+      anchorSma: 80,
+      initialRateKgPerDay: -0.05,
+      horizonDays: 10,
+    });
+    const { estimate } = computeGoalEstimate({
+      targetKg: 75,
+      anchor: "2026-05-01",
+      anchorSma: 80,
+      deltaWeekKg: -0.35,
+      projection,
+      horizonDays: 10,
+    });
+    expect(estimate).not.toBeNull();
+    expect(estimate!.beyondHorizon).toBe(true);
+    expect(
+      extrapolateGoalCrossingBeyondHorizon({
+        targetKg: 75,
+        anchor: "2026-05-01",
+        anchorSma: 80,
+        deltaWeekKg: -0.35,
+        horizonDays: 10,
+        projection,
+      })
+    ).not.toBeNull();
+  });
+});
+
+describe("trend-readiness", () => {
+  it("conta dias consecutivos terminando no anchor", () => {
+    const weights: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) {
+      weights[addDaysIso("2026-05-01", i)] = 80;
+    }
+    expect(consecutiveDaysEndingAt(weights, "2026-05-07")).toBe(7);
+  });
+
+  it("7 dias consecutivos pedem mais 7 para variação semanal", () => {
+    const weights: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) {
+      weights[addDaysIso("2026-05-01", i)] = 80;
+    }
+    const reason = describeInsufficientTrend(weights, "2026-05-07");
+    expect(reason.kind).toBe("need_weekly");
+    expect(reason.message).toContain("14");
+  });
+
+  it("registos espaçados não contam como consecutivos", () => {
+    const weights: Record<string, number> = {};
+    for (let i = 0; i < 7; i++) {
+      weights[addDaysIso("2026-05-01", i * 2)] = 80;
+    }
+    const reason = describeInsufficientTrend(weights, "2026-05-13");
+    expect(reason.kind).toBe("need_sma");
+    expect(reason.consecutiveDays).toBe(1);
   });
 });
 

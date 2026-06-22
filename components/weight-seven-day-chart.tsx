@@ -500,15 +500,6 @@ export function WeightSevenDayChart({
               />
               Média 7 dias
             </span>
-            {showProjection ? (
-              <span className="flex items-center gap-1">
-                <span
-                  className="inline-block h-0.5 w-4 rounded border-t border-dashed border-foreground"
-                  aria-hidden
-                />
-                Projeção
-              </span>
-            ) : null}
           </div>
         </div>
       </div>
