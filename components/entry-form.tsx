@@ -4,7 +4,7 @@ import { useId, useState, useTransition } from "react";
 import { ChevronDown, ChevronLeft, WifiOff, UtensilsCrossed, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createEntry } from "@/app/actions/entries";
-import type { Entry, EntryType } from "@/db/schema";
+import type { Entry } from "@/db/schema";
 import type { PendingEntry } from "@/types/offline";
 import { cn } from "@/lib/utils";
 import { DatePickerSheet } from "./date-picker-sheet";
@@ -22,13 +22,15 @@ function formatDateLabel(date: string): string {
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).format(d);
 }
 
-const PLACEHOLDER: Record<EntryType, string> = {
+type HabitEntryType = "escape" | "exercise";
+
+const PLACEHOLDER: Record<HabitEntryType, string> = {
   escape: "O que você comeu…",
   exercise: "Qual exercício você fez…",
 };
 
 interface EntryFormProps {
-  type: EntryType;
+  type: HabitEntryType;
   onSuccess: (entry: Entry) => void;
   onBack?: () => void;
   initialDescription?: string;

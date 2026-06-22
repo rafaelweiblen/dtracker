@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import type { Entry } from "@/db/schema";
 import { deleteEntry } from "@/app/actions/entries";
 import { EntrySection } from "./entry-section";
+import { WaterSection } from "./water-section";
 import { EditBottomSheet } from "./edit-bottom-sheet";
 import { LogFAB } from "./log-fab";
 import { useSyncQueue } from "@/hooks/use-sync-queue";
@@ -28,6 +29,7 @@ export function DailyLog({ initialEntries, date, readOnly = false, currentWeight
 
   const escapes = optimisticEntries.filter((e) => e.type === "escape");
   const exercises = optimisticEntries.filter((e) => e.type === "exercise");
+  const water = optimisticEntries.filter((e) => e.type === "water");
   const isEmpty = optimisticEntries.length === 0;
 
   function handleDelete(id: string) {
@@ -60,6 +62,10 @@ export function DailyLog({ initialEntries, date, readOnly = false, currentWeight
             entries={exercises}
             onEdit={setEditingEntry}
             onDelete={handleDelete}
+          />
+          <WaterSection
+            entries={water}
+            onDelete={readOnly ? undefined : handleDelete}
           />
         </>
       )}

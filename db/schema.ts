@@ -54,7 +54,7 @@ export const entries = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["escape", "exercise"] }).notNull(),
+    type: text("type", { enum: ["escape", "exercise", "water"] }).notNull(),
     description: text("description").notNull(),
     date: text("date").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -87,7 +87,9 @@ export const weights = sqliteTable(
 
 export type User = typeof users.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
-export type EntryType = "escape" | "exercise";
+export type EntryType = "escape" | "exercise" | "water";
+
+export const WATER_DESCRIPTION = "Água";
 export type Weight = typeof weights.$inferSelect;
 
 export const weightGoals = sqliteTable("weight_goals", {

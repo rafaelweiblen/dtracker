@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { computeMonthSummary, computeStreaks, computeStreakHistory, computeEscapeFreeHistory } from "./entries";
 
 // helpers
-const row = (date: string, type: "escape" | "exercise") => ({ date, type });
+const row = (date: string, type: "escape" | "exercise" | "water") => ({ date, type });
 
 describe("computeMonthSummary", () => {
   it("groups counts by date and type", () => {
@@ -12,12 +12,25 @@ describe("computeMonthSummary", () => {
       row("2025-04-01", "exercise"),
       row("2025-04-02", "exercise"),
     ]);
-    expect(result["2025-04-01"]).toEqual({ escapeCount: 2, exerciseCount: 1 });
-    expect(result["2025-04-02"]).toEqual({ escapeCount: 0, exerciseCount: 1 });
+    expect(result["2025-04-01"]).toEqual({ escapeCount: 2, exerciseCount: 1, waterCount: 0 });
+    expect(result["2025-04-02"]).toEqual({ escapeCount: 0, exerciseCount: 1, waterCount: 0 });
   });
 
   it("returns empty object for no rows", () => {
     expect(computeMonthSummary([])).toEqual({});
+  });
+
+  it("counts water entries separately", () => {
+    const result = computeMonthSummary([
+      row("2025-04-01", "water"),
+      row("2025-04-01", "water"),
+      row("2025-04-01", "exercise"),
+    ]);
+    expect(result["2025-04-01"]).toEqual({
+      escapeCount: 0,
+      exerciseCount: 1,
+      waterCount: 2,
+    });
   });
 });
 

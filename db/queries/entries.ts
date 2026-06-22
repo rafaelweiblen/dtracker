@@ -18,6 +18,7 @@ export async function getEntriesForDate(
 export type DaySummary = {
   escapeCount: number;
   exerciseCount: number;
+  waterCount: number;
 };
 
 export type Streaks = {
@@ -39,9 +40,10 @@ export function computeMonthSummary(
   const summary: Record<string, DaySummary> = {};
   for (const row of rows) {
     if (!summary[row.date])
-      summary[row.date] = { escapeCount: 0, exerciseCount: 0 };
+      summary[row.date] = { escapeCount: 0, exerciseCount: 0, waterCount: 0 };
     if (row.type === "escape") summary[row.date].escapeCount++;
-    else summary[row.date].exerciseCount++;
+    else if (row.type === "exercise") summary[row.date].exerciseCount++;
+    else if (row.type === "water") summary[row.date].waterCount++;
   }
   return summary;
 }

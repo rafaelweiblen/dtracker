@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { entries } from "@/db/schema";
-import type { EntryType, Entry } from "@/db/schema";
+import { WATER_DESCRIPTION, type EntryType, type Entry } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
@@ -25,13 +25,18 @@ async function requireUserId(): Promise<string> {
   return session.user.id;
 }
 
+function resolveDescription(type: EntryType, raw: unknown): string {
+  if (type === "water") return WATER_DESCRIPTION;
+  return validateDescription(raw);
+}
+
 export async function createEntry(input: {
   type: EntryType;
-  description: string;
+  description?: string;
   date?: string;
 }): Promise<Entry> {
   const userId = await requireUserId();
-  const description = validateDescription(input.description);
+  const description = resolveDescription(input.type, input.description);
   const now = new Date();
   const date =
     input.date && /^\d{4}-\d{2}-\d{2}$/.test(input.date)

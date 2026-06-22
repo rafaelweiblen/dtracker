@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { UtensilsCrossed, Dumbbell, Scale } from "lucide-react";
+import { useState, useTransition } from "react";
+import { UtensilsCrossed, Dumbbell, Scale, Droplets } from "lucide-react";
 import { BottomSheet } from "./bottom-sheet";
 import { EntryForm } from "./entry-form";
 import { WeightForm } from "./weight-form";
-import type { Entry, EntryType } from "@/db/schema";
+import { createEntry } from "@/app/actions/entries";
+import { WATER_DESCRIPTION, type Entry } from "@/db/schema";
 import type { PendingEntry } from "@/types/offline";
 
-type SelectedMode = EntryType | "weight" | null;
+type HabitEntryType = "escape" | "exercise";
+type SelectedMode = HabitEntryType | "weight" | null;
+
+function localDateISO(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 interface LogBottomSheetProps {
   open: boolean;
@@ -30,10 +36,54 @@ export function LogBottomSheet({
   currentWeight,
 }: LogBottomSheetProps) {
   const [selectedMode, setSelectedMode] = useState<SelectedMode>(null);
+  const [waterError, setWaterError] = useState("");
+  const [waterPending, startWaterTransition] = useTransition();
 
   function handleClose() {
     setSelectedMode(null);
+    setWaterError("");
     onClose();
+  }
+
+  function handleLogWater() {
+    setWaterError("");
+    const date = initialDate ?? localDateISO();
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+    startWaterTransition(async () => {
+      if (!isOnline && enqueue) {
+        const id = crypto.randomUUID();
+        const now = new Date();
+        await enqueue({
+          id,
+          type: "water",
+          description: WATER_DESCRIPTION,
+          date,
+          createdAt: now.getTime(),
+        });
+        onNewEntry?.({
+          id,
+          userId: "",
+          type: "water",
+          description: WATER_DESCRIPTION,
+          date,
+          createdAt: now,
+          updatedAt: now,
+          edited: false,
+          pendingSync: true,
+        });
+        handleClose();
+        return;
+      }
+
+      try {
+        const entry = await createEntry({ type: "water", date });
+        onNewEntry?.(entry);
+        handleClose();
+      } catch {
+        setWaterError("Erro ao salvar. Tente novamente.");
+      }
+    });
   }
 
   return (
@@ -68,6 +118,25 @@ export function LogBottomSheet({
               <p className="text-sm text-muted-foreground">Registre o exercício feito</p>
             </div>
           </button>
+          <button
+            type="button"
+            onClick={handleLogWater}
+            disabled={waterPending}
+            className="flex items-center gap-3 rounded-xl border border-sky-500/30 bg-sky-500/[0.08] p-4 text-left transition-colors hover:bg-sky-500/[0.12] active:bg-sky-500/[0.14] disabled:opacity-60"
+          >
+            <Droplets size={24} className="shrink-0 text-sky-600 dark:text-sky-400" aria-hidden />
+            <div>
+              <p className="font-semibold text-sky-600 dark:text-sky-400">
+                {waterPending ? "Salvando…" : "Bebi água"}
+              </p>
+              <p className="text-sm text-muted-foreground">Registro rápido, sem detalhes</p>
+            </div>
+          </button>
+          {waterError && (
+            <p role="alert" className="text-center text-xs text-destructive">
+              {waterError}
+            </p>
+          )}
           <button
             type="button"
             onClick={() => setSelectedMode("weight")}

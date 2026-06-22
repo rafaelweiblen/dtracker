@@ -5,11 +5,17 @@ export interface DayCellProps {
   date: string; // YYYY-MM-DD
   hasEscape: boolean;
   hasExercise: boolean;
+  hasWater: boolean;
   isToday: boolean;
   isFuture: boolean;
 }
 
-function linkAriaLabel(date: string, hasEscape: boolean, hasExercise: boolean): string {
+function linkAriaLabel(
+  date: string,
+  hasEscape: boolean,
+  hasExercise: boolean,
+  hasWater: boolean
+): string {
   const long = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "numeric",
@@ -18,11 +24,19 @@ function linkAriaLabel(date: string, hasEscape: boolean, hasExercise: boolean): 
   const bits: string[] = [];
   if (hasEscape) bits.push("escapada registada");
   if (hasExercise) bits.push("exercício registado");
+  if (hasWater) bits.push("água registada");
   const detail = bits.length ? `. ${bits.join("; ")}` : "";
   return `Ver registros de ${long}${detail}`;
 }
 
-export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: DayCellProps) {
+export function DayCell({
+  date,
+  hasEscape,
+  hasExercise,
+  hasWater,
+  isToday,
+  isFuture,
+}: DayCellProps) {
   const day = parseInt(date.slice(8), 10);
 
   const inner = (
@@ -41,7 +55,10 @@ export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: Day
         {hasExercise && (
           <span className="size-1.5 rounded-full bg-primary" aria-hidden />
         )}
-        {!hasEscape && !hasExercise && <span className="size-1.5" />}
+        {hasWater && (
+          <span className="size-1.5 rounded-full bg-sky-500" aria-hidden />
+        )}
+        {!hasEscape && !hasExercise && !hasWater && <span className="size-1.5" />}
       </div>
     </div>
   );
@@ -51,7 +68,7 @@ export function DayCell({ date, hasEscape, hasExercise, isToday, isFuture }: Day
   return (
     <Link
       href={`/day/${date}`}
-      aria-label={linkAriaLabel(date, hasEscape, hasExercise)}
+      aria-label={linkAriaLabel(date, hasEscape, hasExercise, hasWater)}
       className="block rounded-lg hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       {inner}

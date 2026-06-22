@@ -1,17 +1,19 @@
 "use client";
 
 import { UtensilsCrossed, Dumbbell } from "lucide-react";
-import type { Entry, EntryType } from "@/db/schema";
+import type { Entry } from "@/db/schema";
 import { EntryCard } from "./entry-card";
 
+type HabitEntryType = "escape" | "exercise";
+
 interface EntrySectionProps {
-  type: EntryType;
+  type: HabitEntryType;
   entries: Entry[];
   onEdit: (entry: Entry) => void;
   onDelete: (id: string) => void;
 }
 
-const LABELS: Record<EntryType, { icon: React.ReactNode; text: string }> = {
+const LABELS: Record<HabitEntryType, { icon: React.ReactNode; text: string }> = {
   escape: {
     icon: <UtensilsCrossed size={14} className="text-destructive" aria-hidden />,
     text: "Escapadas",
@@ -22,7 +24,7 @@ const LABELS: Record<EntryType, { icon: React.ReactNode; text: string }> = {
   },
 };
 
-const EMPTY_COPY: Record<EntryType, string> = {
+const EMPTY_COPY: Record<HabitEntryType, string> = {
   escape: "Nenhuma escapada registada neste dia.",
   exercise: "Nenhum exercício registado neste dia.",
 };

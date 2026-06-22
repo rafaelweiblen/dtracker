@@ -36,6 +36,7 @@ export function MonthGrid({ month, summary, today }: MonthGridProps) {
         date={date}
         hasEscape={s?.escapeCount > 0}
         hasExercise={s?.exerciseCount > 0}
+        hasWater={(s?.waterCount ?? 0) > 0}
         isToday={date === today}
         isFuture={date > today}
       />
