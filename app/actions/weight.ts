@@ -6,6 +6,7 @@ import { weights } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { isFutureDate } from "@/lib/weight-state";
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -27,6 +28,11 @@ export async function upsertWeight(input: {
     input.date && /^\d{4}-\d{2}-\d{2}$/.test(input.date)
       ? input.date
       : new Date().toISOString().slice(0, 10);
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (isFutureDate(date, today)) {
+    throw new Error("Não é possível registar peso em data futura");
+  }
 
   const now = new Date();
 

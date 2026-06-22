@@ -40,7 +40,9 @@ export function HomeClientWrapper({
         onClose={() => setEditingWeight(false)}
         date={date}
         initialWeight={todayWeight}
-        onSuccess={(weight) => setTodayWeight(weight)}
+        onSuccess={(weight, savedDate) => {
+          if (savedDate === date) setTodayWeight(weight);
+        }}
         onDelete={() => setTodayWeight(null)}
       />
     </>

@@ -202,7 +202,16 @@ export function WeightSevenDayChart({
     return pts.length >= 2 ? pts : null;
   }, [dates, trend, yMinKg, yMaxKg, plotWidth]);
 
-  const hasAnyWeight = dates.some((d) => weightsByDate[d] != null && weightsByDate[d]! > 0);
+  const emptyDays = useMemo(
+    () =>
+      dates
+        .map((date, i) => ({ date, i, x: dayXs[i]! }))
+        .filter(({ date }) => parseWeightKg(weightsByDate[date]) == null),
+    [dates, dayXs, weightsByDate]
+  );
+
+  const columnHitWidth = plotWidth / 7;
+  const hasAnyWeight = dates.some((d) => parseWeightKg(weightsByDate[d]) != null);
   const showProjection =
     trend.eligibleForProjection && !trend.gapPaused && projectionPts != null;
 
@@ -377,9 +386,38 @@ export function WeightSevenDayChart({
                 textAnchor="middle"
                 className="fill-muted-foreground text-[11px]"
               >
-                Toque ou foque um ponto para registar peso
+                Toque num dia para registar peso
               </text>
             ) : null}
+
+            {emptyDays.map(({ date, x }) => (
+              <g
+                key={`empty-${date}`}
+                tabIndex={0}
+                onClick={() => openDay(date, undefined)}
+                onKeyDown={(e) => handlePointKeyDown(e, date, undefined)}
+                className="cursor-pointer outline-none focus-visible:opacity-100"
+                role="button"
+                aria-label={`Registar peso de ${date}`}
+              >
+                <rect
+                  x={x - columnHitWidth / 2}
+                  y={PLOT_TOP}
+                  width={columnHitWidth}
+                  height={PLOT_BOTTOM - PLOT_TOP}
+                  fill="transparent"
+                />
+                <text
+                  x={x}
+                  y={(PLOT_TOP + PLOT_BOTTOM) / 2}
+                  textAnchor="middle"
+                  className="fill-muted-foreground/50 text-[18px] font-light pointer-events-none"
+                  aria-hidden
+                >
+                  +
+                </text>
+              </g>
+            ))}
 
             {smaSegments.map((seg, idx) => (
               <polyline
@@ -481,8 +519,15 @@ export function WeightSevenDayChart({
           onClose={closeSheet}
           date={selectedDate}
           initialWeight={selectedWeight}
-          onSuccess={(weight) => {
-            setWeightsByDate((prev) => ({ ...prev, [selectedDate]: weight }));
+          onSuccess={(weight, savedDate) => {
+            setWeightsByDate((prev) => {
+              const next = { ...prev };
+              if (selectedDate && selectedDate !== savedDate) {
+                delete next[selectedDate];
+              }
+              next[savedDate] = weight;
+              return next;
+            });
           }}
           onDelete={() => {
             setWeightsByDate((prev) => {

@@ -11,7 +11,7 @@ interface EditWeightBottomSheetProps {
   onClose: () => void;
   date: string;
   initialWeight?: number | null;
-  onSuccess: (weight: number) => void;
+  onSuccess: (weight: number, savedDate: string) => void;
   onDelete?: () => void;
 }
 
@@ -38,8 +38,8 @@ export function EditWeightBottomSheet({
       <WeightForm
         date={date}
         initialWeight={initialWeight}
-        onSuccess={(weight) => {
-          onSuccess(weight);
+        onSuccess={(weight, savedDate) => {
+          onSuccess(weight, savedDate);
           onClose();
         }}
         onBack={onClose}

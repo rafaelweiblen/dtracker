@@ -76,14 +76,16 @@ export function LogBottomSheet({
             <Scale size={24} className="shrink-0 text-primary" aria-hidden />
             <div>
               <p className="font-semibold text-foreground">Peso do dia</p>
-              <p className="text-sm text-muted-foreground">Anote seu peso de hoje</p>
+              <p className="text-sm text-muted-foreground">Anote seu peso</p>
             </div>
           </button>
         </div>
       ) : selectedMode === "weight" ? (
         <WeightForm
-          onSuccess={(weight) => {
-            onWeightSaved?.(weight);
+          onSuccess={(weight, savedDate) => {
+            if (!initialDate || savedDate === initialDate) {
+              onWeightSaved?.(weight);
+            }
             handleClose();
           }}
           onBack={() => setSelectedMode(null)}

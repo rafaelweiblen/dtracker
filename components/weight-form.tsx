@@ -1,13 +1,25 @@
 "use client";
 
-import { useId, useState, useTransition } from "react";
-import { ChevronLeft, Scale } from "lucide-react";
+import { useId, useState, useTransition, useEffect } from "react";
+import { ChevronDown, ChevronLeft, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { upsertWeight } from "@/app/actions/weight";
+import { DatePickerSheet } from "./date-picker-sheet";
 import { cn } from "@/lib/utils";
 
+function localDateISO(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function formatDateLabel(date: string): string {
+  const today = localDateISO();
+  if (date === today) return "Hoje";
+  const d = new Date(`${date}T12:00:00`);
+  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).format(d);
+}
+
 interface WeightFormProps {
-  onSuccess: (weight: number) => void;
+  onSuccess: (weight: number, date: string) => void;
   onBack?: () => void;
   initialWeight?: number | null;
   date?: string;
@@ -16,11 +28,22 @@ interface WeightFormProps {
 export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFormProps) {
   const weightInputId = useId();
   const weightErrorId = useId();
+  const datePickerPanelId = useId();
   const [value, setValue] = useState(
     initialWeight != null ? String(initialWeight).replace(".", ",") : ""
   );
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [selectedDate, setSelectedDate] = useState(date ?? localDateISO());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (date) setSelectedDate(date);
+  }, [date]);
+
+  useEffect(() => {
+    setValue(initialWeight != null ? String(initialWeight).replace(".", ",") : "");
+  }, [initialWeight, date]);
 
   const parsed = parseFloat(value.replace(",", "."));
   const isValid = !isNaN(parsed) && parsed > 0 && parsed < 500;
@@ -34,10 +57,11 @@ export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFor
     setError("");
     startTransition(async () => {
       try {
-        await upsertWeight({ weight: parsed, date });
-        onSuccess(parsed);
-      } catch {
-        setError("Erro ao salvar. Tente novamente.");
+        await upsertWeight({ weight: parsed, date: selectedDate });
+        onSuccess(parsed, selectedDate);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        setError(msg || "Erro ao salvar. Tente novamente.");
       }
     });
   }
@@ -60,6 +84,18 @@ export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFor
           Peso do dia
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setDatePickerOpen(true)}
+        aria-expanded={datePickerOpen}
+        aria-haspopup="dialog"
+        aria-controls={datePickerPanelId}
+        className="flex w-fit items-center gap-1 rounded-lg text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        {formatDateLabel(selectedDate)}
+        <ChevronDown size={14} aria-hidden />
+      </button>
 
       <div className="flex flex-col gap-1">
         <label htmlFor={weightInputId} className="text-sm font-medium">
@@ -96,6 +132,14 @@ export function WeightForm({ onSuccess, onBack, initialWeight, date }: WeightFor
       <Button type="submit" disabled={!isValid || isPending}>
         {isPending ? "Salvando…" : "Salvar"}
       </Button>
+
+      <DatePickerSheet
+        open={datePickerOpen}
+        onClose={() => setDatePickerOpen(false)}
+        selected={selectedDate}
+        onSelect={setSelectedDate}
+        panelId={datePickerPanelId}
+      />
     </form>
   );
 }
