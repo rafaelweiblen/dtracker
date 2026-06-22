@@ -15,6 +15,12 @@ export interface ProjectionPoint {
 
 import type { InsufficientTrendReason } from "./trend-readiness";
 
+export type ProjectionBlockReason =
+  | "need_days_in_window"
+  | "need_weekly_trend"
+  | "paused"
+  | "ok";
+
 export interface WeightTrendBundle {
   anchor: string;
   trendState: TrendState;
@@ -28,4 +34,7 @@ export interface WeightTrendBundle {
   goalIncompatible: boolean;
   plateauWarning: boolean;
   insufficientReason: InsufficientTrendReason | null;
+  daysWithWeightInWindow: number;
+  consecutiveDaysAtAnchor: number;
+  projectionBlockReason: ProjectionBlockReason;
 }

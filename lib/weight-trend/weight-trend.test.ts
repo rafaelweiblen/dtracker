@@ -226,3 +226,76 @@ describe("computeWeightTrendBundle", () => {
     expect(bundle.deltaWeekKg).not.toBeNull();
   });
 });
+
+describe("projeção — métricas na janela vs consecutivos", () => {
+  it("11 consecutivos só: expõe contadores e bloqueia por dias na janela", () => {
+    const anchor = "2026-06-20";
+    const weights: Record<string, number> = {};
+    for (let i = 0; i < 11; i++) {
+      weights[addDaysIso(anchor, -i)] = 80;
+    }
+    const bundle = computeWeightTrendBundle({
+      today: anchor,
+      weights,
+      goalTargetKg: 75,
+    });
+    expect(bundle.daysWithWeightInWindow).toBe(11);
+    expect(bundle.consecutiveDaysAtAnchor).toBe(11);
+    expect(bundle.eligibleForProjection).toBe(false);
+    expect(bundle.trendState).toBe("paused");
+    expect(bundle.projectionBlockReason).toBe("paused");
+    expect(bundle.goalEstimate).toBeNull();
+  });
+
+  it("20 dias consecutivos no fim: falta 1 para elegibilidade na janela", () => {
+    const anchor = "2026-06-20";
+    const weights = fillDailyWeights(addDaysIso(anchor, -19), 20, 80);
+    const bundle = computeWeightTrendBundle({
+      today: anchor,
+      weights,
+      goalTargetKg: 75,
+    });
+    expect(bundle.daysWithWeightInWindow).toBe(20);
+    expect(bundle.consecutiveDaysAtAnchor).toBe(20);
+    expect(bundle.eligibleForProjection).toBe(false);
+    expect(bundle.projectionBlockReason).toBe("paused");
+    expect(bundle.trendState).toBe("paused");
+  });
+
+  it("21 na janela mas 11 consecutivos: elegível sem tendência semanal", () => {
+    const anchor = "2026-06-20";
+    const weights: Record<string, number> = {};
+    for (let i = 0; i < 11; i++) {
+      weights[addDaysIso(anchor, -i)] = 80;
+    }
+    for (let i = 0; i < 10; i++) {
+      weights[addDaysIso(anchor, -14 - i)] = 79;
+    }
+    const bundle = computeWeightTrendBundle({
+      today: anchor,
+      weights,
+      goalTargetKg: 75,
+    });
+    expect(bundle.daysWithWeightInWindow).toBe(21);
+    expect(bundle.consecutiveDaysAtAnchor).toBe(11);
+    expect(bundle.eligibleForProjection).toBe(true);
+    expect(bundle.trendState).toBe("insufficient");
+    expect(bundle.projectionBlockReason).toBe("need_weekly_trend");
+    expect(bundle.goalEstimate).toBeNull();
+  });
+
+  it("14+ consecutivos e 21+ na janela com meta: estimativa possível", () => {
+    const weights = fillDailyWeights("2026-04-01", 40, 82);
+    const bundle = computeWeightTrendBundle({
+      today: "2026-05-10",
+      weights,
+      goalTargetKg: 75,
+    });
+    expect(bundle.daysWithWeightInWindow).toBeGreaterThanOrEqual(21);
+    expect(bundle.consecutiveDaysAtAnchor).toBeGreaterThanOrEqual(14);
+    expect(bundle.eligibleForProjection).toBe(true);
+    expect(bundle.trendState).toBe("ok");
+    expect(bundle.projectionBlockReason).toBe("ok");
+    expect(bundle.goalEstimate).not.toBeNull();
+  });
+});

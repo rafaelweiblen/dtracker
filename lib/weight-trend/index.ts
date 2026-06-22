@@ -4,7 +4,7 @@ import {
 } from "@/lib/weight-seven-day-chart";
 import { computeHorizonDays, isEligibleForProjection } from "./eligibility";
 import { computeGoalEstimate } from "./goal-crossing";
-import { isTrendPaused } from "./gaps";
+import { countDaysWithWeight, isTrendPaused } from "./gaps";
 import { normalizeWeights } from "./normalize";
 import {
   buildProjectionPoints,
@@ -16,8 +16,22 @@ import {
   sma7AtDay,
   weeklyDeltaKg,
 } from "./sma7";
-import { describeInsufficientTrend } from "./trend-readiness";
-import type { TrendState, WeightTrendBundle } from "./types";
+import {
+  consecutiveDaysEndingAt,
+  describeInsufficientTrend,
+} from "./trend-readiness";
+import type { ProjectionBlockReason, TrendState, WeightTrendBundle } from "./types";
+
+function computeProjectionBlockReason(
+  gapPaused: boolean,
+  eligibleForProjection: boolean,
+  trendState: TrendState
+): ProjectionBlockReason {
+  if (gapPaused || trendState === "paused") return "paused";
+  if (!eligibleForProjection) return "need_days_in_window";
+  if (trendState !== "ok") return "need_weekly_trend";
+  return "ok";
+}
 
 export interface ComputeWeightTrendOptions {
   today: string;
@@ -55,6 +69,13 @@ export function computeWeightTrendBundle(
 
   const eligibleForProjection = isEligibleForProjection(weights, anchor);
   const horizonDays = computeHorizonDays(weights, anchor);
+  const windowStart = addDaysIso(anchor, -89);
+  const daysWithWeightInWindow = countDaysWithWeight(
+    weights,
+    windowStart,
+    anchor
+  );
+  const consecutiveDaysAtAnchor = consecutiveDaysEndingAt(weights, anchor);
 
   let projectionPoints: WeightTrendBundle["projectionPoints"] = [];
   let plateauWarning = false;
@@ -98,6 +119,12 @@ export function computeWeightTrendBundle(
       ? describeInsufficientTrend(weights, anchor)
       : null;
 
+  const projectionBlockReason = computeProjectionBlockReason(
+    gapPaused,
+    eligibleForProjection,
+    trendState
+  );
+
   return {
     anchor,
     trendState,
@@ -111,6 +138,9 @@ export function computeWeightTrendBundle(
     goalIncompatible,
     plateauWarning,
     insufficientReason,
+    daysWithWeightInWindow,
+    consecutiveDaysAtAnchor,
+    projectionBlockReason,
   };
 }
 

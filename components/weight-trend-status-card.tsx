@@ -2,6 +2,8 @@ import { TrendingDown, TrendingUp, PauseCircle, AlertCircle } from "lucide-react
 import { cn } from "@/lib/utils";
 import type { WeightTrendBundle } from "@/lib/weight-trend/types";
 import { formatGoalDatePt } from "@/lib/weight-trend/goal-crossing";
+import { PROJECTION_MIN_DAYS_IN_WINDOW } from "@/lib/weight-trend/eligibility";
+import { WEEKLY_TREND_DAYS } from "@/lib/weight-trend/trend-readiness";
 
 interface WeightTrendStatusCardProps {
   bundle: Pick<
@@ -15,6 +17,9 @@ interface WeightTrendStatusCardProps {
     | "plateauWarning"
     | "insufficientReason"
     | "horizonDays"
+    | "daysWithWeightInWindow"
+    | "consecutiveDaysAtAnchor"
+    | "projectionBlockReason"
   >;
   goalTargetKg?: number | null;
 }
@@ -38,9 +43,13 @@ export function WeightTrendStatusCard({
     plateauWarning,
     insufficientReason,
     horizonDays,
+    daysWithWeightInWindow,
+    consecutiveDaysAtAnchor,
+    projectionBlockReason,
   } = bundle;
 
   const showProjectionNote = goalEstimate != null;
+  const weeklyRemaining = Math.max(0, WEEKLY_TREND_DAYS - consecutiveDaysAtAnchor);
 
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-border/90 bg-card px-3.5 py-3 shadow-sm shadow-black/[0.03]">
@@ -62,9 +71,15 @@ export function WeightTrendStatusCard({
               <span>{formatDelta(deltaWeekKg)}</span>
             </div>
           ) : trendState === "paused" || gapPaused ? (
-            <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <PauseCircle size={16} aria-hidden />
-              <span>Tendência em pausa — registe peso nos próximos dias</span>
+            <div className="mt-1 flex flex-col gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <PauseCircle size={16} aria-hidden />
+                <span>Tendência em pausa — registe peso nos próximos dias</span>
+              </div>
+              <span className="text-xs">
+                Buraco de ≥4 dias consecutivos sem peso ou histórico insuficiente na janela
+                de 90 dias.
+              </span>
             </div>
           ) : (
             <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -117,14 +132,42 @@ export function WeightTrendStatusCard({
                 </p>
               ) : null}
             </>
-          ) : !eligibleForProjection ? (
+          ) : projectionBlockReason === "need_days_in_window" ? (
+            <>
+              <p className="mt-1">
+                Projeção disponível com {PROJECTION_MIN_DAYS_IN_WINDOW} dias com peso nos
+                últimos 90 dias (tens{" "}
+                <span className="font-medium tabular-nums text-foreground">
+                  {daysWithWeightInWindow}/{PROJECTION_MIN_DAYS_IN_WINDOW}
+                </span>
+                ). Os dias não precisam ser seguidos; só contam registos nessa janela móvel.
+              </p>
+              {daysWithWeightInWindow < PROJECTION_MIN_DAYS_IN_WINDOW ? (
+                <p className="mt-1">
+                  Registos mais antigos que 90 dias deixam de contar para a projeção.
+                </p>
+              ) : null}
+            </>
+          ) : projectionBlockReason === "need_weekly_trend" ? (
             <p className="mt-1">
-              Projeção disponível após 21 dias com peso nos últimos 90 dias.
+              Faltam{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {weeklyRemaining}
+              </span>{" "}
+              dias consecutivos para a tendência semanal (
+              <span className="font-medium tabular-nums text-foreground">
+                {consecutiveDaysAtAnchor}/{WEEKLY_TREND_DAYS}
+              </span>
+              ) — a projeção usa essa tendência.
             </p>
-          ) : trendState !== "ok" ? (
+          ) : projectionBlockReason === "paused" ? (
             <p className="mt-1">
-              Projeção disponível quando a tendência semanal estiver calculada (14 dias
-              consecutivos com peso).
+              Projeção em pausa — buraco de ≥4 dias recente ou menos de{" "}
+              {PROJECTION_MIN_DAYS_IN_WINDOW} dias com peso na janela de 90 dias (
+              <span className="font-medium tabular-nums text-foreground">
+                {daysWithWeightInWindow}/{PROJECTION_MIN_DAYS_IN_WINDOW}
+              </span>
+              ).
             </p>
           ) : (
             <p className="mt-1">
