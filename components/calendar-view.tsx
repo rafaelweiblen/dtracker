@@ -25,6 +25,13 @@ function formatMonthTitle(ym: string) {
     .format(new Date(year, month - 1, 1));
 }
 
+function splitCaption(full: string): { value: string; label: string | null } {
+  const separator = " - ";
+  const at = full.indexOf(separator);
+  if (at === -1) return { value: full, label: null };
+  return { value: full.slice(0, at), label: full.slice(at + separator.length) };
+}
+
 interface CalendarViewProps {
   initialSummary: Record<string, DaySummary>;
   today: string;
@@ -66,6 +73,8 @@ export function CalendarView({
 
   const isCurrentMonth = month === currentMonth;
   const title = formatMonthTitle(month);
+  const sma = splitCaption(sma7Caption);
+  const exercise = splitCaption(exerciseCaption);
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,16 +99,25 @@ export function CalendarView({
         </button>
       </div>
 
-      <MonthGrid
-        month={month}
-        summary={summaries[month] ?? {}}
-        today={today}
-      />
-      <p className="pt-1 text-left text-xs leading-snug text-muted-foreground">
-        {sma7Caption}
-        <span className="mx-1.5 text-border">|</span>
-        {exerciseCaption}
-      </p>
+      <div>
+        <MonthGrid
+          month={month}
+          summary={summaries[month] ?? {}}
+          today={today}
+        />
+        <div className="grid grid-cols-2 gap-x-4 pt-1">
+          <div className="min-w-0 text-center">
+            <p className="text-metric tabular-nums leading-none">{sma.value}</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">{sma.label}</p>
+          </div>
+          <div className="min-w-0 text-center">
+            <p className="text-metric tabular-nums leading-none">{exercise.value}</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {exercise.label ?? "\u00a0"}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
