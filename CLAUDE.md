@@ -37,3 +37,17 @@ turso db shell dieta-prod "SELECT name FROM sqlite_master WHERE type='table' ORD
 ```
 
 Execute a migração **antes do deploy** para garantir que o banco de produção esteja atualizado quando o código novo chegar.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for rafaelweiblen/dtracker (`gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default roles mapped 1:1: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+single-context. See `docs/agents/domain.md`.
