@@ -29,12 +29,14 @@ interface CalendarViewProps {
   initialSummary: Record<string, DaySummary>;
   today: string;
   sma7Caption: string;
+  exerciseCaption: string;
 }
 
 export function CalendarView({
   initialSummary,
   today,
   sma7Caption,
+  exerciseCaption,
 }: CalendarViewProps) {
   const currentMonth = today.slice(0, 7);
   const [month, setMonth] = useState(currentMonth);
@@ -95,6 +97,8 @@ export function CalendarView({
       />
       <p className="pt-1 text-left text-xs leading-snug text-muted-foreground">
         {sma7Caption}
+        <span className="mx-1.5 text-border">|</span>
+        {exerciseCaption}
       </p>
     </div>
   );

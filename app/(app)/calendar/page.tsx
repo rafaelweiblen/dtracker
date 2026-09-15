@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getMonthSummary } from "@/db/queries/entries";
+import { getExerciseRecordDates, getMonthSummary } from "@/db/queries/entries";
 import { getWeightsBetweenDates } from "@/db/queries/weights";
 import { CalendarView } from "@/components/calendar-view";
 import { DateSync } from "@/components/date-sync";
@@ -26,11 +26,16 @@ export default async function CalendarPage({
   const month =
     rawMonth && /^\d{4}-\d{2}$/.test(rawMonth) ? rawMonth : currentMonth;
 
-  const [summary, weights] = await Promise.all([
+  const [summary, weights, exerciseDates] = await Promise.all([
     getMonthSummary(session.user.id, month),
     getWeightsBetweenDates(session.user.id, addDaysIso(today, -7), today),
+    getExerciseRecordDates(session.user.id),
   ]);
-  const { sma7 } = computeCalendarStrip({ today, weights });
+  const { sma7, exercise } = computeCalendarStrip({
+    today,
+    weights,
+    exerciseDates,
+  });
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -40,6 +45,7 @@ export default async function CalendarPage({
         initialSummary={summary}
         today={today}
         sma7Caption={sma7}
+        exerciseCaption={exercise}
       />
     </div>
   );

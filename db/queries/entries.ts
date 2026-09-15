@@ -222,6 +222,14 @@ function daysBetween(from: string, to: string): number {
 
 // ---------- DB queries ----------
 
+export async function getExerciseRecordDates(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ date: entries.date })
+    .from(entries)
+    .where(and(eq(entries.userId, userId), eq(entries.type, "exercise")));
+  return rows.map((row) => row.date);
+}
+
 export async function getMonthSummary(
   userId: string,
   month: string
