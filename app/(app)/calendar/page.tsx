@@ -1,7 +1,10 @@
 import { auth } from "@/auth";
 import { getMonthSummary } from "@/db/queries/entries";
+import { getWeightsBetweenDates } from "@/db/queries/weights";
 import { CalendarView } from "@/components/calendar-view";
 import { DateSync } from "@/components/date-sync";
+import { computeCalendarStrip } from "@/lib/calendar-strip";
+import { addDaysIso } from "@/lib/weight-seven-day-chart";
 import { redirect } from "next/navigation";
 
 export default async function CalendarPage({
@@ -23,13 +26,21 @@ export default async function CalendarPage({
   const month =
     rawMonth && /^\d{4}-\d{2}$/.test(rawMonth) ? rawMonth : currentMonth;
 
-  const summary = await getMonthSummary(session.user.id, month);
+  const [summary, weights] = await Promise.all([
+    getMonthSummary(session.user.id, month),
+    getWeightsBetweenDates(session.user.id, addDaysIso(today, -7), today),
+  ]);
+  const { sma7 } = computeCalendarStrip({ today, weights });
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <DateSync serverDate={today} />
       <h1 className="text-xl font-semibold">Calendário</h1>
-      <CalendarView initialSummary={summary} today={today} />
+      <CalendarView
+        initialSummary={summary}
+        today={today}
+        sma7Caption={sma7}
+      />
     </div>
   );
 }

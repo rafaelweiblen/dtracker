@@ -28,9 +28,14 @@ function formatMonthTitle(ym: string) {
 interface CalendarViewProps {
   initialSummary: Record<string, DaySummary>;
   today: string;
+  sma7Caption: string;
 }
 
-export function CalendarView({ initialSummary, today }: CalendarViewProps) {
+export function CalendarView({
+  initialSummary,
+  today,
+  sma7Caption,
+}: CalendarViewProps) {
   const currentMonth = today.slice(0, 7);
   const [month, setMonth] = useState(currentMonth);
   const [summaries, setSummaries] = useState<Record<string, Record<string, DaySummary>>>({
@@ -88,6 +93,9 @@ export function CalendarView({ initialSummary, today }: CalendarViewProps) {
         summary={summaries[month] ?? {}}
         today={today}
       />
+      <p className="pt-1 text-left text-xs leading-snug text-muted-foreground">
+        {sma7Caption}
+      </p>
     </div>
   );
 }
