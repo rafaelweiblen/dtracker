@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MonthGrid } from "./month-grid";
 import type { DaySummary } from "@/db/queries/entries";
@@ -28,9 +28,14 @@ function formatMonthTitle(ym: string) {
 interface CalendarViewProps {
   initialSummary: Record<string, DaySummary>;
   today: string;
+  children?: ReactNode;
 }
 
-export function CalendarView({ initialSummary, today }: CalendarViewProps) {
+export function CalendarView({
+  initialSummary,
+  today,
+  children,
+}: CalendarViewProps) {
   const currentMonth = today.slice(0, 7);
   const [month, setMonth] = useState(currentMonth);
   const [summaries, setSummaries] = useState<Record<string, Record<string, DaySummary>>>({
@@ -88,6 +93,7 @@ export function CalendarView({ initialSummary, today }: CalendarViewProps) {
         summary={summaries[month] ?? {}}
         today={today}
       />
+      {children}
     </div>
   );
 }
